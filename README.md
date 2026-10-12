@@ -9,4 +9,4 @@
 * Luke Frayne
 
 ## Project Documentation
-All design deliverables, user stories, mockups, and CRC cards can be found on our [Wiki Page]("https://github.com/CMPUT301F26Atomic/Atomic-Cryptids/wiki")
+All design deliverables, user stories, mockups, and CRC cards can be found on our [Wiki Page](https://github.com/CMPUT301F26Atomic/Atomic-Cryptids/wiki)
