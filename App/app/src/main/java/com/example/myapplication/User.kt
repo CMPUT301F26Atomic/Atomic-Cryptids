@@ -1,77 +1,23 @@
 package com.atomiccryptids.campsiteapp
 
 import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import com.google.firebase.firestore.SetOptions
+import com.google.firebase.firestore.FieldValue
 
-open class User {
-    var isAdmin: Boolean = false
-        private set
-    var isCamper: Boolean = false
-        private set
-    var isCampsiteOwner: Boolean = false
-        private set
+interface User {
+    val role: String
+    fun saveUser() {}
 
-    fun makeAdmin() {
-        isAdmin = true
+
+    fun optNotification(boolean: Boolean): String {
+        return if (boolean) "user will receive notification" else "user won't receive notifications"
+        /*
+        I am too tired and its late. I'll fix this part later
+         */
     }
-
-    fun makeCamper() {
-        isCamper = true
-    }
-
-    fun makeCampsiteOwner() {
-        isCampsiteOwner = true
-    }
-
-    fun saveUser() {
-        FirebaseFirestore.getInstance().collection("users").add(
-            mapOf(
-                "isAdmin" to isAdmin,
-                "isCamper" to isCamper,
-                "isCampsiteOwner" to isCampsiteOwner
-            )
-        ).addOnFailureListener {
-            Log.e("Campsite", "saveUser failed", it)
-        }
-    }
-
-    fun optNotification() {
-        println("He will receive notifications")
-    }
-
-    fun deleteProfile() {
-        TODO()
-    }
+    fun deleteProfile(){}
 }
 
-class Camper : User() {
-    fun searchCampsites(onResult: (List<Campsite>) -> Unit, onError: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").get()
-            .addOnSuccessListener { result ->
-                val campsites = result.documents.map { doc ->
-                    Campsite(
-                        capacity = (doc.getLong("capacity") ?: 0).toInt(),
-                        name = doc.getString("name") ?: "",
-                        owner = doc.getString("owner") ?: "",
-                        description = doc.getString("description") ?: "",
-                        location = doc.getString("location") ?: "",
-                        occupancy = (doc.getLong("occupancy") ?: 0).toInt()
-                    )
-                }
-                onResult(campsites)
-            }
-            .addOnFailureListener {
-                onError("Error: ${it.message}")
-            }
-    }
-}
-
-class CampsiteOwner : User() {
-    fun createCampsite(name: String, description: String, location: String, capacity: Int): Campsite {
-        return Campsite(capacity, name, "owner", description, location, 0)
-    }
-
-    fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
-        campsite.save(onResult)
-    }
-}
+class Admin: User {override val role = "admin"}

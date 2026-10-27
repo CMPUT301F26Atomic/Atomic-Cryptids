@@ -8,6 +8,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -16,6 +18,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.atomiccryptids.campsiteapp.ui.theme.MyApplicationTheme
+import com.example.myapplication.Camper
+import com.example.myapplication.CampsiteOwner
+import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -35,17 +40,21 @@ class MainActivity : ComponentActivity() {
 fun App(modifier: Modifier = Modifier) {
     var user by remember { mutableStateOf<User?>(null) }
 
+    LaunchedEffect(Unit) {
+        val auth = FirebaseAuth.getInstance()
+        if (auth.currentUser == null) {
+            auth.signInAnonymously()
+        }
+    }
+
     BackHandler(enabled = user != null) { user = null }
 
-    Column(modifier.padding(16.dp)) {
+    Column(modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
         when (val u = user) {
             null -> LoginScreen { user = it }
             is Camper -> CamperScreen(u) { user = null }
             is CampsiteOwner -> OwnerScreen(u) { user = null }
-            else -> {
-                Button(onClick = { user = null }) { Text("Back") }
-                Text("Admin")
-            }
+            else -> {}
         }
     }
 }
@@ -53,28 +62,50 @@ fun App(modifier: Modifier = Modifier) {
 @Composable
 fun LoginScreen(onPick: (User) -> Unit) {
     Text("Pick your role")
-    Button(onClick = { onPick(User().apply { makeAdmin(); saveUser() }) }) { Text("Admin") }
-    Button(onClick = { onPick(CampsiteOwner().apply { makeCampsiteOwner(); saveUser() }) }) { Text("Campsite owner") }
-    Button(onClick = { onPick(Camper().apply { makeCamper(); saveUser() }) }) { Text("Camper") }
+    Button(onClick = { onPick(CampsiteOwner().apply { saveUser() }) }) { Text("Campsite owner") }
+    Button(onClick = { onPick(Camper().apply { saveUser() }) }) { Text("Camper") }
+}
+
+@Composable
+fun CommonButtons(user: User, onBack: () -> Unit) {
+    var message by remember { mutableStateOf("") }
+    var notificationsOn by remember { mutableStateOf(false) }
+
+    Button(onClick = onBack) { Text("Back") }
+    Button(onClick = {
+        notificationsOn = !notificationsOn
+        message = user.optNotification(notificationsOn)
+    }) { Text("Toggle notifications") }
+    Button(onClick = {
+        user.deleteProfile()
+        onBack()
+    }) { Text("Delete profile") }
+    Text(message)
 }
 
 @Composable
 fun CamperScreen(camper: Camper, onBack: () -> Unit) {
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
-    var error by remember { mutableStateOf("") }
+    var message by remember { mutableStateOf("") }
 
-    Button(onClick = onBack) { Text("Back") }
+    CommonButtons(camper, onBack)
+
     Button(onClick = {
-        error = ""
-        camper.searchCampsites({ campsites = it }, { error = it })
+        message = ""
+        camper.searchCampsites({ campsites = it }, { message = it })
     }) { Text("Search campsite") }
-    Text(error)
+    Text(message)
 
     campsites?.let { list ->
         if (list.isEmpty()) {
             Text("No campsites yet")
         }
-        list.forEach { Text("${it.name} - ${it.location}") }
+        list.forEach { campsite ->
+            Button(onClick = {
+                camper.joinLottery(campsite)
+                message = "Joined lottery: ${campsite.name}"
+            }) { Text("${campsite.name} - ${campsite.location}") }
+        }
     }
 }
 
@@ -85,8 +116,10 @@ fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit) {
     var description by remember { mutableStateOf("") }
     var capacity by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
+    var lastCampsite by remember { mutableStateOf<Campsite?>(null) }
+    var qrMessage by remember { mutableStateOf("") }
 
-    Button(onClick = onBack) { Text("Back") }
+    CommonButtons(owner, onBack)
 
     TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
     TextField(value = location, onValueChange = { location = it }, label = { Text("Location") })
@@ -97,6 +130,8 @@ fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit) {
         val campsite = owner.createCampsite(name, description, location, capacity.toIntOrNull() ?: 0)
         status = "Saving..."
         owner.postCampsite(campsite) { status = it }
+        lastCampsite = campsite
+        qrMessage = ""
         name = ""
         location = ""
         description = ""
@@ -104,4 +139,11 @@ fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit) {
     }) { Text("Add campsite") }
 
     Text(status)
+
+    lastCampsite?.let { campsite ->
+        Button(onClick = { qrMessage = campsite.generateQRCode() }) {
+            Text("Generate QR code for ${campsite.name}")
+        }
+    }
+    Text(qrMessage)
 }
