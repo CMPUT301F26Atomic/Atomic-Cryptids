@@ -59,7 +59,7 @@ class Camper: User {
             userLotteries.add(campsite)
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
             FirebaseFirestore.getInstance().collection("users").document(uid)
-                .set(mapOf("lotteries" to FieldValue.arrayUnion(campsite.toMap())), SetOptions.merge())
+                .set(mapOf("lotteries" to FieldValue.arrayUnion(campsite.getCampsite())), SetOptions.merge())
                 .addOnFailureListener { Log.e("User", "joinLottery failed", it) }
         }
     }

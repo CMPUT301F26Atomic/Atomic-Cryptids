@@ -10,6 +10,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -17,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.atomiccryptids.campsiteapp.Campsite
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.tasks.await
 
 @Composable
 fun CamperScreen(
@@ -47,16 +49,27 @@ fun CamperScreen(
     }
 
     /*
-    * UI elements for choosing filters
-    * Filter options:
-    * Location
-    * Max occupancy
-    * Tags
+    UI elements for choosing filters
+    Filter options:
+    Location
+    Max occupancy
+    Tags
     */
     Row(modifier = Modifier.fillMaxWidth()) {
 
         // Location
-        // TODO get all location values from database
 
+        // Google Gemini: asked to get all values of a certain attribute in the collection without using coroutines
+        var locations by remember { mutableStateOf<List<String>>(emptyList()) }
+
+        FirebaseFirestore.getInstance().collection("campsites").get()
+            .addOnSuccessListener { snapshot ->
+                locations = snapshot.mapNotNull { it.getString("location") }
+            }
+
+
+        FilterMenu(locations, listOf())
+
+        // TODO add filter menu for max occupancy
     }
 }
