@@ -27,18 +27,17 @@ class Campsite(
     fun getCapacity(name: String): Int {
         return capacity
     }
-    // in Campsite
-    fun toMap(): Map<String, Any> = mapOf(
-        "capacity" to capacity,
-        "name" to name,
-        "owner" to owner,
-        "description" to description,
-        "location" to location,
-        "occupancy" to occupancy
-    )
 
     fun save(onResult: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").add(toMap())
+        val campsite: Map<String, Any> = mapOf(
+            "capacity" to capacity,
+            "name" to name,
+            "owner" to owner,
+            "description" to description,
+            "location" to location,
+            "occupancy" to occupancy
+        )
+        FirebaseFirestore.getInstance().collection("campsites").add(campsite)
             .addOnSuccessListener { onResult("Saved") }
             .addOnFailureListener { onResult("Error: ${it.message}") }
     }

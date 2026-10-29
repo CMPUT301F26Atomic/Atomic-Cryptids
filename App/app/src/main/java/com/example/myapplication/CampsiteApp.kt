@@ -13,8 +13,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.atomiccryptids.campsiteapp.CamperScreen
-import com.atomiccryptids.campsiteapp.OwnerScreen
 import com.atomiccryptids.campsiteapp.User
 import com.google.firebase.auth.FirebaseAuth
 
