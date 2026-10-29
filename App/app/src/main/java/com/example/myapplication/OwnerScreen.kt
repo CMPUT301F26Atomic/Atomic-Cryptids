@@ -16,6 +16,7 @@ fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit) {
     var location by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var capacity by remember { mutableStateOf("") }
+    var rules by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var lastCampsite by remember { mutableStateOf<Campsite?>(null) }
     var qrMessage by remember { mutableStateOf("") }
@@ -26,9 +27,10 @@ fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit) {
     TextField(value = location, onValueChange = { location = it }, label = { Text("Location") })
     TextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
     TextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Capacity") })
+    TextField (value = rules, onValueChange = {rules = it}, label = {Text("Rules")})
 
     Button(onClick = {
-        val campsite = owner.createCampsite(name, description, location, capacity.toIntOrNull() ?: 0)
+        val campsite = owner.createCampsite(name, description, location, capacity.toIntOrNull() ?: 0, rules, owner)
         status = "Saving..."
         owner.postCampsite(campsite) { status = it }
         lastCampsite = campsite

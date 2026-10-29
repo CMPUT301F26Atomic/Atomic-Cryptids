@@ -41,10 +41,11 @@ class Camper: User {
                     Campsite(
                         capacity = (doc.getLong("capacity") ?: 0).toInt(),
                         name = doc.getString("name") ?: "",
-                        owner = doc.getString("owner") ?: "",
+                        owner = CampsiteOwner(),
                         description = doc.getString("description") ?: "",
-                        location = doc.getString("location") ?: "",
-                        occupancy = (doc.getLong("occupancy") ?: 0).toInt()
+                        rules = doc.getString("rules")?: "",
+                        location = doc.getString("location") ?: ""
+
                     )
                 }
                 onResult(campsites)

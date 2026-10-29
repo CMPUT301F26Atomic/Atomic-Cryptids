@@ -1,15 +1,32 @@
 package com.atomiccryptids.campsiteapp
 
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import com.example.myapplication.CampsiteOwner
 import com.google.firebase.firestore.FirebaseFirestore
 
+/*
+attributes:
+name, description, geolocation, max occupancy, amenities, rules
+
+Responsibilities
+availability and check available dates(todo)
+Manage pricing
+Manage images and tags
+Maintain rating
+be booked by camper
+associations with lottery
+associate with owner
+ */
+
 class Campsite(
-    val capacity: Int,
     val name: String,
-    private val owner: String,
     val description: String,
     val location: String,
-    private var occupancy: Int,
+    val capacity: Int,
+    val rules: String,
+     val owner: CampsiteOwner,
+
 ) {
     private val participants = mutableStateListOf<String>()
 
@@ -33,7 +50,8 @@ class Campsite(
         "owner" to owner,
         "description" to description,
         "location" to location,
-        "occupancy" to occupancy
+        "rules" to rules,
+        "occupancy" to participants.size
     )
 
     fun save(onResult: (String) -> Unit) {
@@ -41,4 +59,5 @@ class Campsite(
             .addOnSuccessListener { onResult("Saved") }
             .addOnFailureListener { onResult("Error: ${it.message}") }
     }
+
 }
