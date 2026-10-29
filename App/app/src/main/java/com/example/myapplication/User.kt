@@ -19,5 +19,3 @@ interface User {
     }
     fun deleteProfile(){}
 }
-
-class Admin: User {override val role = "admin"}

@@ -13,7 +13,6 @@ class Campsite(
 ) {
     private val participants = mutableStateListOf<String>()
 
-
     fun generateQRCode(): String {
         return "QR Code"
     }
@@ -27,8 +26,8 @@ class Campsite(
     fun getCapacity(name: String): Int {
         return capacity
     }
-    // in Campsite
-    fun toMap(): Map<String, Any> = mapOf(
+
+    fun getCampsite(): Map<String, Any> = mapOf(
         "capacity" to capacity,
         "name" to name,
         "owner" to owner,
@@ -38,7 +37,7 @@ class Campsite(
     )
 
     fun save(onResult: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").add(toMap())
+        FirebaseFirestore.getInstance().collection("campsites").add(getCampsite())
             .addOnSuccessListener { onResult("Saved") }
             .addOnFailureListener { onResult("Error: ${it.message}") }
     }
