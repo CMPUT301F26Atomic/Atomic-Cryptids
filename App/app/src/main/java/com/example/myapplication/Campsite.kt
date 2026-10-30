@@ -4,12 +4,13 @@ import androidx.compose.runtime.mutableStateListOf
 import com.google.firebase.firestore.FirebaseFirestore
 
 class Campsite(
+    var id: String = "",
     val capacity: Int,
     val name: String,
     private val owner: String,
     val description: String,
     val location: String,
-    private var occupancy: Int,
+    private var occupancy: Int
 ) {
     private val participants = mutableStateListOf<String>()
 

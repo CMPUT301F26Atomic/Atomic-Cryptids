@@ -29,10 +29,24 @@ class CampsiteOwner : User {
     }
 
     fun createCampsite(name: String, description: String, location: String, capacity: Int): Campsite {
-        return Campsite(capacity, name, "owner", description, location, 0)
+        return Campsite(capacity = capacity, name = name, owner = "owner", description = description, location = location, occupancy = 0)
     }
 
     fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
-        campsite.save(onResult)
+        FirebaseFirestore.getInstance().collection("campsites").add(campsite.getCampsite())
+            .addOnSuccessListener { documentReference ->
+                campsite.id = documentReference.id
+                onResult("Saved")
+            }
+            .addOnFailureListener { onResult("Error: ${it.message}") }
+    }
+
+    fun createLottery(campsiteId: String, numberOfWinners: Int, onResult: (String) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        val lotteryData = mapOf("campsiteIds" to listOf(campsiteId), "numberOfWinners" to numberOfWinners, "ownerId" to uid, "waitlist" to emptyList<String>()
+        )
+        FirebaseFirestore.getInstance().collection("lotteries").add(lotteryData)
+            .addOnSuccessListener { onResult("Lottery Created!") }
+            .addOnFailureListener { Log.e("Lottery", "Failed", it) }
     }
 }

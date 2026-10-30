@@ -11,7 +11,7 @@ import androidx.compose.runtime.setValue
 import com.atomiccryptids.campsiteapp.Campsite
 
 @Composable
-fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit) {
+fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit = {}, onNavigateToLottery: ()-> Unit = {}) {
     var name by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -47,4 +47,9 @@ fun OwnerScreen(owner: CampsiteOwner, onBack: () -> Unit) {
         }
     }
     Text(qrMessage)
+
+    //To Lottery Screen
+    Button(onClick = { onNavigateToLottery() }) {
+        Text("Lotteries")
+    }
 }

@@ -19,6 +19,8 @@ import com.google.firebase.auth.FirebaseAuth
 @Composable
 fun CampsiteApp(modifier: Modifier = Modifier) {
     var user by remember { mutableStateOf<User?>(null) }
+    var showLottery by remember { mutableStateOf(false) }
+    var activeCampsiteId by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         val auth = FirebaseAuth.getInstance()
@@ -27,14 +29,22 @@ fun CampsiteApp(modifier: Modifier = Modifier) {
         }
     }
 
-    BackHandler(enabled = user != null) { user = null }
+    BackHandler(enabled = user != null) {
+        if (showLottery) showLottery = false else user = null
+    }
 
     Column(modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
         when (val u = user) {
             null -> LoginScreen { user = it }
             is Camper -> CamperScreen(u) { user = null }
-            is CampsiteOwner -> OwnerScreen(u) { user = null }
-            else -> {}
+            is CampsiteOwner -> {
+                if (showLottery) {
+                    val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+                    LotteryScreen(ownerUid = uid, onBack = { showLottery = false })
+                } else {
+                    OwnerScreen(owner = u, onBack = { user = null }, onNavigateToLottery = { showLottery = true })
+                }
+            }
+            }
         }
     }
-}
