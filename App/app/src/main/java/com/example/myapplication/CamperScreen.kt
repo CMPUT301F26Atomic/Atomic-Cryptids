@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -77,18 +78,17 @@ fun CamperScreen(camper: Camper, navController: NavController) {
 
     }
 
-        campsites?.let { list ->
-            if (list.isEmpty()) {
-                Text("No campsites yet")
-            }
-            list.forEach { campsite ->
-                Button(onClick = {
-                    camper.joinLottery(campsite)
-                    message = "Joined lottery: ${campsite.name}"
-                }) { Text("${campsite.name} - ${campsite.location}") }
+    campsites?.let { list ->
+        if (list.isEmpty()) {
+            Text("No campsites yet")
+        }
+        list.forEach { campsite ->
+            Button(onClick = {
+                camper.joinLottery(campsite)
+                message = "Joined lottery: ${campsite.name}"
+            }) { Text("${campsite.name} - ${campsite.location}") }
 
-                Spacer(modifier = Modifier.height(16.dp))
-            }
+            Spacer(modifier = Modifier.height(16.dp))
         }
     }
 }
