@@ -33,6 +33,10 @@ class CampsiteOwner : User {
         return Campsite( name, description, location, capacity,rules, owner)
     }
 
+
+    fun addPhoto (){
+        //todo: when function is called and picture is given an image will be added to the campsite (linked via location possibly)
+    }
     fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
         campsite.save(onResult)
     }

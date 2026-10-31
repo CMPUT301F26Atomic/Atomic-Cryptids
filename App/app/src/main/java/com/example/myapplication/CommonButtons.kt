@@ -7,6 +7,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import com.atomiccryptids.campsiteapp.User
 
 @Composable
@@ -25,3 +27,11 @@ fun CommonButtons(user: User, onBack: () -> Unit) {
     }) { Text("Delete profile") }
     Text(message)
 }
+
+@Composable
+fun AppPolicyLink () {
+    val uriHandler = LocalUriHandler.current
+    Button(onClick = {uriHandler.openUri("https://sepahvandsepehr.github.io/app-policy/")})
+    {Text("App Policy")}
+}
+
