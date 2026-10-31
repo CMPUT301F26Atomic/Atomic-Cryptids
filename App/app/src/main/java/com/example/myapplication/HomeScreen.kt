@@ -18,9 +18,9 @@ fun HomeScreen(user: User?, navController: NavController) {
     //BackHandler(enabled = user != null) { user = null }
 
     when (user) {
-        null -> navController.navigate("login")
-        is Camper -> navController.navigate("camper")
-        is CampsiteOwner -> navController.navigate("owner")
+        null -> navController.navigate("login") { launchSingleTop = true }
+        is Camper -> navController.navigate("camper") { launchSingleTop = true }
+        is CampsiteOwner -> navController.navigate("owner") { launchSingleTop = true }
         else -> {}
     }
 }

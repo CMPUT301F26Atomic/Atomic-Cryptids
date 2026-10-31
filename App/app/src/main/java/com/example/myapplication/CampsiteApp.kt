@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -14,7 +15,7 @@ import com.atomiccryptids.campsiteapp.User
 fun CampsiteApp() {
     val navController = rememberNavController()
 
-    var user by remember { mutableStateOf<User?>(null) }
+    var user by rememberSaveable { mutableStateOf<User?>(null) }
 
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(user, navController) }
