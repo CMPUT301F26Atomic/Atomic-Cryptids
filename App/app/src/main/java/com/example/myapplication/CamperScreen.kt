@@ -28,8 +28,21 @@ fun CamperScreen(
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
     var message by remember { mutableStateOf("") }
 
-    CommonButtons(camper, onBack)
+    var showSettings by remember { mutableStateOf(false) }
 
+    if (showSettings) {
+        CamperProfileSetting(
+            camper = camper,
+            onBack = { showSettings = false },
+            onDeleted = onBack
+        )
+        return
+    }
+
+    Button(onClick = onBack) { Text("Back") }
+    Button(onClick = { showSettings = true }) { Text("Profile settings") }
+
+    // AI code block begins
     Button(onClick = {
         message = ""
         camper.searchCampsites({ campsites = it }, { message = it })
@@ -47,6 +60,7 @@ fun CamperScreen(
             }) { Text("${campsite.name} - ${campsite.location}") }
         }
     }
+    // AI block code ends
 
     /*
     UI elements for choosing filters
