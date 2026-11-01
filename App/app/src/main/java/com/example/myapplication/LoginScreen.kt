@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun LoginScreen(onSelectOwner: () -> Unit, onSelectCamper: () -> Unit, navController: NavController) {
+fun LoginScreen(navController: NavController, onSelectOwner: () -> Unit, onSelectCamper: () -> Unit) {
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Button(onClick = {

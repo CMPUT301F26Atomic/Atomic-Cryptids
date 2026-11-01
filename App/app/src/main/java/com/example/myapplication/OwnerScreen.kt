@@ -20,7 +20,7 @@ import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 
 @Composable
-fun OwnerScreen(owner: CampsiteOwner, navController: NavController) {
+fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     var name by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }

@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 
 @Composable
@@ -16,12 +17,14 @@ fun CampsiteApp() {
     val navController = rememberNavController()
 
     var user by rememberSaveable { mutableStateOf<User?>(null) }
+    var campsite by rememberSaveable { mutableStateOf<Campsite?>(null) }
 
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(user, navController) }
         composable("login") {
 
             LoginScreen(
+                navController,
                 onSelectOwner = {
                     user = CampsiteOwner()
                     (user as CampsiteOwner).saveUser()
@@ -30,20 +33,25 @@ fun CampsiteApp() {
                     user = Camper()
                     (user as Camper).saveUser()
                 },
-                navController
             )
         }
         composable("camper") {
             CamperScreen(
+                navController,
                 user as Camper,
-                navController
+                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
             )
         }
         composable("owner") {
-
             OwnerScreen(
-                user as CampsiteOwner,
-                navController
+                navController,
+                user as CampsiteOwner
+            )
+        }
+        composable("campsite") {
+            CampsiteScreen(
+                navController,
+                campsite as Campsite
             )
         }
     }

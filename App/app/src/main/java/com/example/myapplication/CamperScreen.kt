@@ -25,7 +25,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
 @Composable
-fun CamperScreen(camper: Camper, navController: NavController) {
+fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite: (Campsite) -> Unit) {
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
     var message by remember { mutableStateOf("") }
 
@@ -76,19 +76,24 @@ fun CamperScreen(camper: Camper, navController: NavController) {
             // TODO add filter menu for max occupancy
         }
 
+        campsites?.let { list ->
+            if (list.isEmpty()) {
+                Text("No campsites yet")
+            }
+            list.forEach { campsite ->
+                Button(onClick = {
+                    onSelectCampsite(campsite)
+                    navController.navigate("campsite")
+                    /*
+                    camper.joinLottery(campsite)
+                    message = "Joined lottery: ${campsite.name}"
+                     */
+                }) { Text("${campsite.name} - ${campsite.location}") }
+
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
     }
 
-    campsites?.let { list ->
-        if (list.isEmpty()) {
-            Text("No campsites yet")
-        }
-        list.forEach { campsite ->
-            Button(onClick = {
-                camper.joinLottery(campsite)
-                message = "Joined lottery: ${campsite.name}"
-            }) { Text("${campsite.name} - ${campsite.location}") }
-
-            Spacer(modifier = Modifier.height(16.dp))
-        }
-    }
 }
