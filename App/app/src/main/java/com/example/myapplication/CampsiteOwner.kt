@@ -35,16 +35,22 @@ class CampsiteOwner : User {
     fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
         FirebaseFirestore.getInstance().collection("campsites").add(campsite.getCampsite())
             .addOnSuccessListener { documentReference ->
-                campsite.id = documentReference.id
+                campsite.id = documentReference.id //capture id for use in lottery
                 onResult("Saved")
             }
             .addOnFailureListener { onResult("Error: ${it.message}") }
     }
 
+    /**
+     * Creates new lottery for specific campsite and saves to firebase
+     *
+     * @param campsiteId campsiteId is the firebase id of the selected campsite
+     * @param numberOfWinners number of winners for the lottery
+     * @param onResult passes success string to UI when firebase operation is complete
+     */
     fun createLottery(campsiteId: String, numberOfWinners: Int, onResult: (String) -> Unit) {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        val lotteryData = mapOf("campsiteIds" to listOf(campsiteId), "numberOfWinners" to numberOfWinners, "ownerId" to uid, "waitlist" to emptyList<String>()
-        )
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return // if user is not logged in return
+        val lotteryData = mapOf("campsiteIds" to listOf(campsiteId), "numberOfWinners" to numberOfWinners, "ownerId" to uid, "waitlist" to emptyList<String>()) //store list of campsiteIds and initilize empty waitlist
         FirebaseFirestore.getInstance().collection("lotteries").add(lotteryData)
             .addOnSuccessListener { onResult("Lottery Created!") }
             .addOnFailureListener { Log.e("Lottery", "Failed", it) }
