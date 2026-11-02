@@ -4,13 +4,22 @@ import androidx.compose.runtime.mutableStateListOf
 import com.google.firebase.firestore.FirebaseFirestore
 
 class Campsite(
-    val capacity: Int,
-    val name: String,
+    private val capacity: Int,
+    private val name: String,
     private val owner: String,
-    val description: String,
-    val location: String,
+    private val description: String,
+    private val location: String,
     private var occupancy: Int,
 ) {
+    val campsiteToMap = mapOf(
+        "capacity" to getCapacity(),
+        "name" to getName(),
+        "owner" to getOwner(),
+        "description" to getDescription(),
+        "location" to getLocation(),
+        "occupancy" to getOccupancy()
+    )
+
     private val participants = mutableStateListOf<String>()
 
     fun generateQRCode(): String {
@@ -23,21 +32,32 @@ class Campsite(
         }
     }
 
-    fun getCapacity(name: String): Int {
+    fun getCapacity(): Int {
         return capacity
     }
 
-    fun getCampsite(): Map<String, Any> = mapOf(
-        "capacity" to capacity,
-        "name" to name,
-        "owner" to owner,
-        "description" to description,
-        "location" to location,
-        "occupancy" to occupancy
-    )
+    fun getName(): String {
+        return name
+    }
+
+    fun getOwner(): String {
+        return owner
+    }
+
+    fun getDescription(): String {
+        return description
+    }
+
+    fun getLocation(): String {
+        return location
+    }
+
+    fun getOccupancy(): Int {
+        return occupancy
+    }
 
     fun save(onResult: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").add(getCampsite())
+        FirebaseFirestore.getInstance().collection("campsites").add(campsiteToMap)
             .addOnSuccessListener { onResult("Saved") }
             .addOnFailureListener { onResult("Error: ${it.message}") }
     }

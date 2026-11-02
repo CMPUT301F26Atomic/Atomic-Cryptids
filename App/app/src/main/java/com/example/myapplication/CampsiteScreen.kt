@@ -13,9 +13,14 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 
+/**
+ * Screen that displays campsite details
+ *
+ * @param navController controller used for navigating between screens
+ * @param campsite campsite object which the details are for
+ */
 @Composable
 fun CampsiteScreen(navController: NavController, campsite: Campsite) {
-    val campsiteDetails = campsite.getCampsite()
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Button(
@@ -28,26 +33,26 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Capacity: ${campsiteDetails["capacity"].toString()}")
+        Text("Capacity: ${campsite.getCapacity()}")
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Name: ${campsiteDetails["name"].toString()}")
+        Text("Name: ${campsite.getName()}")
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Owner: ${campsiteDetails["owner"].toString()}")
+        Text("Owner: ${campsite.getName()}")
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Description: ${campsiteDetails["description"].toString()}")
+        Text("Description: ${campsite.getDescription()}")
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text("Location: ${campsiteDetails["location"].toString()}")
+        Text("Location: ${campsite.getLocation()}")
 
         Spacer(modifier = Modifier.height(16.dp))
         
-        Text("Occupancy: ${campsiteDetails["occupancy"].toString()}")
+        Text("Occupancy: ${campsite.getOccupancy()}")
     }
 }
