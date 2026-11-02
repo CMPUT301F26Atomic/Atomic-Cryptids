@@ -26,6 +26,8 @@ fun CamperScreen(camper: Camper, navController: NavController) {
     Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         Button(
             onClick = {
+                // Possible bug where the user object becomes null causing the app to crash
+
                 navController.navigate("login") {
                     popUpTo(0)
                 }
