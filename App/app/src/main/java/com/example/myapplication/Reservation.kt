@@ -8,7 +8,7 @@ import com.google.firebase.firestore.FirebaseFirestore
  * Purpose: the shared model for reservation user stories
  *
  * Design rationale: an immutable data class, state changes produce a copy,
- * so a reservation held by the UI can never be mutated behind its back.
+ * so a reservation held by the UI can never be mutated.
  * Date ranges are half-open i.e. start is included but end date is excluded,
  * so one user's checkout day can be the next user's check-in day.
  * A campsite is identified uniquely by (name + location).
@@ -23,6 +23,7 @@ import com.google.firebase.firestore.FirebaseFirestore
  */
 data class Reservation(
     val id: String = "",
+    val campsiteId: String = "",
     val campsiteName: String,
     val campsiteLocation: String,
     val userId: String,
@@ -41,12 +42,19 @@ data class Reservation(
     fun isActive(): Boolean = status == Status.ACTIVE
 
     fun overlaps(other: Reservation): Boolean =
-        campsiteName == other.campsiteName &&
-            campsiteLocation == other.campsiteLocation &&
+        sameCampsite(other) &&
             isActive() && other.isActive() &&
             startDateMillis < other.endDateMillis && other.startDateMillis < endDateMillis
 
+    private fun sameCampsite(other: Reservation): Boolean =
+        if (campsiteId.isNotBlank() && other.campsiteId.isNotBlank()) {
+            campsiteId == other.campsiteId
+        } else {
+            campsiteName == other.campsiteName && campsiteLocation == other.campsiteLocation
+        }
+
     fun toMap(): Map<String, Any> = mapOf(
+        "campsiteId" to campsiteId,
         "campsiteName" to campsiteName,
         "campsiteLocation" to campsiteLocation,
         "userId" to userId,
@@ -76,6 +84,7 @@ data class Reservation(
         fun fromMap(id: String, data: Map<String, Any?>): Reservation? = runCatching {
             Reservation(
                 id = id,
+                campsiteId = data["campsiteId"] as? String ?: "",
                 campsiteName = data["campsiteName"] as? String ?: "",
                 campsiteLocation = data["campsiteLocation"] as? String ?: "",
                 userId = data["userId"] as String,

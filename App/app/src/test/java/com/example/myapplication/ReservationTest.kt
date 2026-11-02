@@ -9,8 +9,8 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Local unit tests for [Reservation]: construction rules, date-overlap logic,
- * and the Firestore map round-trip. Firestore itself is not exercised.
+ * Local unit tests for [Reservation]: construction rules, date-overlap logic.
+ * TODO: test load from firestore and saving logic.
  */
 class ReservationTest {
 
@@ -19,10 +19,12 @@ class ReservationTest {
     private fun reservation(
         start: Long = 10 * day,
         end: Long = 13 * day,
+        campsiteId: String = "",
         name: String = "Pine Hollow",
         userId: String = "uid-1",
         status: Reservation.Status = Reservation.Status.ACTIVE,
     ) = Reservation(
+        campsiteId = campsiteId,
         campsiteName = name,
         campsiteLocation = "Jasper",
         userId = userId,
@@ -64,5 +66,12 @@ class ReservationTest {
         val a = reservation()
         assertFalse(a.overlaps(reservation(name = "Birch Flats")))
         assertFalse(a.overlaps(reservation(status = Reservation.Status.CANCELLED)))
+    }
+
+    @Test
+    fun overlaps_usesCampsiteIdWhenBothPresent() {
+        val a = reservation(campsiteId = "site-1")
+        assertFalse(a.overlaps(reservation(campsiteId = "site-2")))
+        assertTrue(a.overlaps(reservation(campsiteId = "site-1", name = "Birch Flats")))
     }
 }
