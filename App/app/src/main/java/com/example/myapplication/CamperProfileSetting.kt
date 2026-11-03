@@ -33,7 +33,7 @@ fun CamperProfileSetting(
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Button(onClick = onBack) { Text("Back") }
-
+// check to see if its changed in firebase
         Button(onClick = {
             notificationsOn = !notificationsOn
             message = camper.optNotification(notificationsOn)

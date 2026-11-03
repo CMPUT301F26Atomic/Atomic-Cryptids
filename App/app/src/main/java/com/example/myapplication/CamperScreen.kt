@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -20,6 +21,9 @@ import com.atomiccryptids.campsiteapp.Campsite
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
 
+//US 01.01.05 View campsite details
+//US 01.01.06 Join lottery
+
 @Composable
 fun CamperScreen(
     camper: Camper,
@@ -27,8 +31,8 @@ fun CamperScreen(
 ) {
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
     var message by remember { mutableStateOf("") }
-
     var showSettings by remember { mutableStateOf(false) }
+    var selectedCampsite by remember { mutableStateOf<Campsite?>(null) }
 
     if (showSettings) {
         CamperProfileSetting(
@@ -39,28 +43,36 @@ fun CamperScreen(
         return
     }
 
-    Button(onClick = onBack) { Text("Back") }
-    Button(onClick = { showSettings = true }) { Text("Profile settings") }
+    if (selectedCampsite != null) {
+        showCampsiteDetails(camper = camper, campsite = selectedCampsite!!, onBack = onBack)
+        return
+    }
 
-    // AI code block begins
-    Button(onClick = {
-        message = ""
-        camper.searchCampsites({ campsites = it }, { message = it })
-    }) { Text("Search campsite") }
-    Text(message)
+    Column(modifier = Modifier.padding(16.dp)) {
+        Button(onClick = onBack) { Text("Back") }
+        Button(onClick = { showSettings = true }) { Text("Profile settings") }
 
-    campsites?.let { list ->
-        if (list.isEmpty()) {
-            Text("No campsites yet")
-        }
-        list.forEach { campsite ->
-            Button(onClick = {
-                camper.joinLottery(campsite)
-                message = "Joined lottery: ${campsite.name}"
-            }) { Text("${campsite.name} - ${campsite.location}") }
+        Button(onClick = {
+            camper.searchCampsites({ campsites = it }, { message = it })
+        }) { Text("Search campsite") }
+
+        Text(message)
+
+        campsites?.let { list ->
+            if (list.isEmpty()) {
+                Text("no campsites")
+            } else {
+                list.forEach { campsite ->
+                    Button(onClick = { selectedCampsite = campsite }) {
+                        Text("${campsite.name} - ${campsite.location}")
+                    }
+                }
+            }
         }
     }
-    // AI block code ends
+}
+
+
 
     /*
     UI elements for choosing filters
@@ -68,7 +80,7 @@ fun CamperScreen(
     Location
     Max occupancy
     Tags
-    */
+
     Row(modifier = Modifier.fillMaxWidth()) {
 
         // Location
@@ -87,3 +99,5 @@ fun CamperScreen(
         // TODO add filter menu for max occupancy
     }
 }
+
+     */
