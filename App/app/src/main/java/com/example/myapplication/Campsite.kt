@@ -22,6 +22,7 @@ class Campsite(
     private val name: String,
     private val capacity: Int,
     private val owner: String,
+    private val occupancy: Int = 0,
     private val description: String,
     private val location: String,
     private val rules: String = "",
