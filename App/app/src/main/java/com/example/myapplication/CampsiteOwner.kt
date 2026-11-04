@@ -29,8 +29,16 @@ class CampsiteOwner : User {
             .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
     }
 
-    fun createCampsite(name: String, description: String, location: String, capacity: Int, rules: String, owner: CampsiteOwner): Campsite {
-        return Campsite( name, description, location, capacity,rules, owner)
+    fun createCampsite(name: String, description: String, location: String, capacity: Int, rules: String): Campsite {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        return Campsite(
+            capacity = capacity,
+            name = name,
+            owner = uid,
+            description = description,
+            location = location,
+            rules = rules,
+        )
     }
 
 
