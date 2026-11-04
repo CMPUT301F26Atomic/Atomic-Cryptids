@@ -43,8 +43,8 @@ class Camper: User {
                         name = doc.getString("name") ?: "",
                         owner = doc.getString("owner") ?: "",
                         description = doc.getString("description") ?: "",
-                        location = doc.getString("location") ?: "",
-                        occupancy = (doc.getLong("occupancy") ?: 0).toInt()
+                        rules = doc.getString("rules") ?: "",
+                        location = doc.getString("location") ?: ""
                     )
                 }
                 onResult(campsites)

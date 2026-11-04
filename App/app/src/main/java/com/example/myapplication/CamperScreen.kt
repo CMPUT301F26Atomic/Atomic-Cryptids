@@ -11,12 +11,9 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -25,18 +22,32 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
+
+//US 01.01.05 View campsite details
+//US 01.01.06 Join lottery
 
 @Composable
 fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite: (Campsite) -> Unit) {
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
     var message by remember { mutableStateOf("") }
+    var showSettings by remember { mutableStateOf(false) }
+
+    if (showSettings) {
+        CamperProfileSetting(
+            camper = camper,
+            onBack = { showSettings = false },
+            onDeleted = {
+                navController.navigate("login") {
+                    popUpTo(0)
+                }
+            }
+        )
+        return
+    }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Button(
             onClick = {
-                // Possible bug where the user object becomes null causing the app to crash
-
                 navController.navigate("login") {
                     popUpTo(0)
                 }
@@ -47,7 +58,9 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // CommonButtons(camper, onBack)
+        Button(onClick = { showSettings = true }) { Text("Profile settings") }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
             message = ""
@@ -77,7 +90,7 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
                 }
 
             FilterMenu(locations, listOf())
-            
+
             // TODO add filter menu for max occupancy
         }
 
@@ -89,10 +102,7 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
                 Button(onClick = {
                     onSelectCampsite(campsite)
                     navController.navigate("campsite")
-                    /*
-                    camper.joinLottery(campsite)
-                    message = "Joined lottery: ${campsite.name}"
-                     */
+
                 }) { Text("${campsite.getName()} - ${campsite.getLocation()}") }
 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -100,5 +110,4 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
         }
 
     }
-
 }

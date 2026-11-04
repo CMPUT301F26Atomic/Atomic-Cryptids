@@ -29,6 +29,7 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     var location by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
     var capacity by remember { mutableStateOf("") }
+    var rules by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var lastCampsite by remember { mutableStateOf<Campsite?>(null) }
     var qrMessage by remember { mutableStateOf("") }
@@ -36,8 +37,6 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Button(
             onClick = {
-                // Possible bug where the user object becomes null causing the app to crash
-
                 navController.navigate("login") {
                     popUpTo(0)
                 }
@@ -48,8 +47,6 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        //CommonButtons(owner, onBack)
-
         Column {
             TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
             Spacer(modifier = Modifier.height(16.dp))
@@ -58,10 +55,12 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
             TextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
             Spacer(modifier = Modifier.height(16.dp))
             TextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Capacity") })
+            Spacer(modifier = Modifier.height(16.dp))
+            TextField(value = rules, onValueChange = { rules = it }, label = { Text("Rules") })
         }
 
         Button(onClick = {
-            val campsite = owner.createCampsite(name, description, location, capacity.toIntOrNull() ?: 0)
+            val campsite = owner.createCampsite(name, description, location, capacity.toIntOrNull() ?: 0, rules)
             status = "Saving..."
             owner.postCampsite(campsite) { status = it }
             lastCampsite = campsite
@@ -70,6 +69,7 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
             location = ""
             description = ""
             capacity = ""
+            rules = ""
         }) { Text("Add campsite") }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -90,5 +90,4 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     Button(onClick = { navController.navigate("lottery") }) {
         Text("Lotteries")
     }
-  }
 }
