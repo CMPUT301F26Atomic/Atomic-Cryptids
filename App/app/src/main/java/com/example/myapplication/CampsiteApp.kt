@@ -9,6 +9,7 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.google.firebase.auth.FirebaseAuth
 import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 
@@ -16,9 +17,10 @@ import com.atomiccryptids.campsiteapp.User
 fun CampsiteApp() {
     val navController = rememberNavController()
 
+
     var user by rememberSaveable { mutableStateOf<User?>(null) }
     var campsite by rememberSaveable { mutableStateOf<Campsite?>(null) }
-
+    
     NavHost(navController = navController, startDestination = "home") {
         composable("home") { HomeScreen(user, navController) }
         composable("login") {
@@ -53,6 +55,13 @@ fun CampsiteApp() {
                 navController,
                 campsite as Campsite,
                 user as Camper
+            )
+        }
+        composable("lottery") {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            LotteryScreen(
+                ownerUid = uid,
+                onBack = { navController.popBackStack() }
             )
         }
     }

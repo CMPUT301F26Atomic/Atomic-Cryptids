@@ -2,8 +2,11 @@ package com.example.myapplication
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -20,6 +23,7 @@ import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 
 @Composable
+
 fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     var name by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
@@ -30,7 +34,7 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     var lastCampsite by remember { mutableStateOf<Campsite?>(null) }
     var qrMessage by remember { mutableStateOf("") }
 
-    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Button(
             onClick = {
                 navController.navigate("login") {
@@ -82,6 +86,8 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Text(qrMessage)
+    //To Lottery Screen
+    Button(onClick = { navController.navigate("lottery") }) {
+        Text("Lotteries")
     }
 }

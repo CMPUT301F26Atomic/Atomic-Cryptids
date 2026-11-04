@@ -3,8 +3,11 @@ package com.example.myapplication
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -42,7 +45,7 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
         return
     }
 
-    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Button(
             onClick = {
                 navController.navigate("login") {
@@ -99,6 +102,7 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
                 Button(onClick = {
                     onSelectCampsite(campsite)
                     navController.navigate("campsite")
+
                 }) { Text("${campsite.getName()} - ${campsite.getLocation()}") }
 
                 Spacer(modifier = Modifier.height(16.dp))

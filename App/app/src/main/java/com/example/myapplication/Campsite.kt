@@ -18,8 +18,9 @@ associate with owner
  */
 
 class Campsite(
-    private val capacity: Int,
+    var id: String = "",
     private val name: String,
+    private val capacity: Int,
     private val owner: String,
     private val description: String,
     private val location: String,
