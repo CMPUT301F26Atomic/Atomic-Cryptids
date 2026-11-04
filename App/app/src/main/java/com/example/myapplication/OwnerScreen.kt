@@ -50,17 +50,32 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
         Column {
             TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
             Spacer(modifier = Modifier.height(16.dp))
-            TextField(value = location, onValueChange = { location = it }, label = { Text("Location") })
+            TextField(
+                value = location,
+                onValueChange = { location = it },
+                label = { Text("Location") })
             Spacer(modifier = Modifier.height(16.dp))
-            TextField(value = description, onValueChange = { description = it }, label = { Text("Description") })
+            TextField(
+                value = description,
+                onValueChange = { description = it },
+                label = { Text("Description") })
             Spacer(modifier = Modifier.height(16.dp))
-            TextField(value = capacity, onValueChange = { capacity = it }, label = { Text("Capacity") })
+            TextField(
+                value = capacity,
+                onValueChange = { capacity = it },
+                label = { Text("Capacity") })
             Spacer(modifier = Modifier.height(16.dp))
             TextField(value = rules, onValueChange = { rules = it }, label = { Text("Rules") })
         }
 
         Button(onClick = {
-            val campsite = owner.createCampsite(name, description, location, capacity.toIntOrNull() ?: 0, rules)
+            val campsite = owner.createCampsite(
+                name,
+                description,
+                location,
+                capacity.toIntOrNull() ?: 0,
+                rules
+            )
             status = "Saving..."
             owner.postCampsite(campsite) { status = it }
             lastCampsite = campsite
@@ -86,8 +101,9 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-    //To Lottery Screen
-    Button(onClick = { navController.navigate("lottery") }) {
-        Text("Lotteries")
+        //To Lottery Screen
+        Button(onClick = { navController.navigate("lottery") }) {
+            Text("Lotteries")
+        }
     }
 }
