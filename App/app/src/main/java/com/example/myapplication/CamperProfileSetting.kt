@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -44,8 +45,17 @@ fun CamperProfileSetting(
             onDeleted()
         }) { Text("Delete profile") }
 
+        AppPolicyLink()
+
         Text(message)
     }
+}
+
+@Composable
+fun AppPolicyLink() {
+    val uriHandler = LocalUriHandler.current
+    Button(onClick = { uriHandler.openUri("https://sepahvandsepehr.github.io/app-policy/") })
+    { Text("App Policy") }
 }
 
 @Preview(showBackground = true)

@@ -1,8 +1,6 @@
 package com.atomiccryptids.campsiteapp
 
 import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.snapshots.SnapshotStateList
-import com.example.myapplication.CampsiteOwner
 import com.google.firebase.firestore.FirebaseFirestore
 
 /*
@@ -20,15 +18,25 @@ associate with owner
  */
 
 class Campsite(
-    val name: String,
-    val description: String,
-    val location: String,
-    val capacity: Int,
-    val rules: String,
-     val owner: CampsiteOwner,
-
+    private val capacity: Int,
+    private val name: String,
+    private val owner: String,
+    private val description: String,
+    private val location: String,
+    private val rules: String = "",
 ) {
     private val participants = mutableStateListOf<String>()
+
+    val campsiteToMap: Map<String, Any>
+        get() = mapOf(
+            "capacity" to capacity,
+            "name" to name,
+            "owner" to owner,
+            "description" to description,
+            "location" to location,
+            "rules" to rules,
+            "occupancy" to participants.size
+        )
 
     fun generateQRCode(): String {
         return "QR Code"
@@ -40,24 +48,37 @@ class Campsite(
         }
     }
 
-    fun getCapacity(name: String): Int {
+    fun getCapacity(): Int {
         return capacity
     }
 
-    fun getCampsite(): Map<String, Any> = mapOf(
-        "capacity" to capacity,
-        "name" to name,
-        "owner" to owner,
-        "description" to description,
-        "location" to location,
-        "rules" to rules,
-        "occupancy" to participants.size
-    )
+    fun getName(): String {
+        return name
+    }
+
+    fun getOwner(): String {
+        return owner
+    }
+
+    fun getDescription(): String {
+        return description
+    }
+
+    fun getLocation(): String {
+        return location
+    }
+
+    fun getRules(): String {
+        return rules
+    }
+
+    fun getOccupancy(): Int {
+        return participants.size
+    }
 
     fun save(onResult: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").add(getCampsite())
+        FirebaseFirestore.getInstance().collection("campsites").add(campsiteToMap)
             .addOnSuccessListener { onResult("Saved") }
             .addOnFailureListener { onResult("Error: ${it.message}") }
     }
-
 }
