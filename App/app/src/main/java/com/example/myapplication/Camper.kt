@@ -55,11 +55,11 @@ class Camper: User {
     }
 
     fun joinLottery(campsite: Campsite) {
-        if (userLotteries.none { it.name == campsite.name && it.location == campsite.location }) {
+        if (userLotteries.none { it.getName() == campsite.getName() && it.getLocation() == campsite.getLocation() }) {
             userLotteries.add(campsite)
             val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
             FirebaseFirestore.getInstance().collection("users").document(uid)
-                .set(mapOf("lotteries" to FieldValue.arrayUnion(campsite.getCampsite())), SetOptions.merge())
+                .set(mapOf("lotteries" to FieldValue.arrayUnion(campsite.campsiteToMap)), SetOptions.merge())
                 .addOnFailureListener { Log.e("User", "joinLottery failed", it) }
         }
     }

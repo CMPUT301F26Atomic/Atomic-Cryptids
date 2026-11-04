@@ -1,50 +1,67 @@
 package com.example.myapplication
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.atomiccryptids.campsiteapp.User
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
 import com.google.firebase.auth.FirebaseAuth
+import com.atomiccryptids.campsiteapp.Campsite
+import com.atomiccryptids.campsiteapp.User
 
 @Composable
-fun CampsiteApp(modifier: Modifier = Modifier) {
-    var user by remember { mutableStateOf<User?>(null) }
-    var showLottery by remember { mutableStateOf(false) }
-    var activeCampsiteId by remember { mutableStateOf("") }
+fun CampsiteApp() {
+    val navController = rememberNavController()
 
-    LaunchedEffect(Unit) {
-        val auth = FirebaseAuth.getInstance()
-        if (auth.currentUser == null) {
-            auth.signInAnonymously()
+
+    var user by rememberSaveable { mutableStateOf<User?>(null) }
+    var campsite by rememberSaveable { mutableStateOf<Campsite?>(null) }
+    
+    NavHost(navController = navController, startDestination = "home") {
+        composable("home") { HomeScreen(user, navController) }
+        composable("login") {
+
+            LoginScreen(
+                navController,
+                onSelectOwner = {
+                    user = CampsiteOwner()
+                    (user as CampsiteOwner).saveUser()
+                },
+                onSelectCamper = {
+                    user = Camper()
+                    (user as Camper).saveUser()
+                },
+            )
+        }
+        composable("camper") {
+            CamperScreen(
+                navController,
+                user as Camper,
+                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
+            )
+        }
+        composable("owner") {
+            OwnerScreen(
+                navController,
+                user as CampsiteOwner
+            )
+        }
+        composable("campsite") {
+            CampsiteScreen(
+                navController,
+                campsite as Campsite
+            )
+        }
+        composable("lottery") {
+            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            LotteryScreen(
+                ownerUid = uid,
+                onBack = { navController.popBackStack() }
+            )
         }
     }
-
-    BackHandler(enabled = user != null) {
-        if (showLottery) showLottery = false else user = null
-    }
-
-    Column(modifier.padding(16.dp).verticalScroll(rememberScrollState())) {
-        when (val u = user) {
-            null -> LoginScreen { user = it }
-            is Camper -> CamperScreen(u) { user = null }
-            is CampsiteOwner -> {
-                if (showLottery) {
-                    val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-                    LotteryScreen(ownerUid = uid, onBack = { showLottery = false })
-                } else {
-                    OwnerScreen(owner = u, onBack = { user = null }, onNavigateToLottery = { showLottery = true })
-                }
-            }
-            }
-        }
-    }
+}
