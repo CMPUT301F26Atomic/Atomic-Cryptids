@@ -51,7 +51,8 @@ fun CampsiteApp() {
         composable("campsite") {
             CampsiteScreen(
                 navController,
-                campsite as Campsite
+                campsite as Campsite,
+                user as Camper
             )
         }
     }

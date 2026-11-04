@@ -3,24 +3,40 @@ package com.atomiccryptids.campsiteapp
 import androidx.compose.runtime.mutableStateListOf
 import com.google.firebase.firestore.FirebaseFirestore
 
+/*
+attributes:
+name, description, geolocation, max occupancy, amenities, rules
+
+Responsibilities
+availability and check available dates(todo)
+Manage pricing
+Manage images and tags
+Maintain rating
+be booked by camper
+associations with lottery
+associate with owner
+ */
+
 class Campsite(
     private val capacity: Int,
     private val name: String,
     private val owner: String,
     private val description: String,
     private val location: String,
-    private var occupancy: Int,
+    private val rules: String = "",
 ) {
-    val campsiteToMap = mapOf(
-        "capacity" to getCapacity(),
-        "name" to getName(),
-        "owner" to getOwner(),
-        "description" to getDescription(),
-        "location" to getLocation(),
-        "occupancy" to getOccupancy()
-    )
-
     private val participants = mutableStateListOf<String>()
+
+    val campsiteToMap: Map<String, Any>
+        get() = mapOf(
+            "capacity" to capacity,
+            "name" to name,
+            "owner" to owner,
+            "description" to description,
+            "location" to location,
+            "rules" to rules,
+            "occupancy" to participants.size
+        )
 
     fun generateQRCode(): String {
         return "QR Code"
@@ -52,8 +68,12 @@ class Campsite(
         return location
     }
 
+    fun getRules(): String {
+        return rules
+    }
+
     fun getOccupancy(): Int {
-        return occupancy
+        return participants.size
     }
 
     fun save(onResult: (String) -> Unit) {

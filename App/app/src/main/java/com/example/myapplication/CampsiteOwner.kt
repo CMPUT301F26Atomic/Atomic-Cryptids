@@ -7,6 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
+
 class CampsiteOwner : User {
     override val role= "campsite owner"
     override fun optNotification (boolean: Boolean): String {
@@ -28,10 +29,22 @@ class CampsiteOwner : User {
             .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
     }
 
-    fun createCampsite(name: String, description: String, location: String, capacity: Int): Campsite {
-        return Campsite(capacity, name, "owner", description, location, 0)
+    fun createCampsite(name: String, description: String, location: String, capacity: Int, rules: String): Campsite {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        return Campsite(
+            capacity = capacity,
+            name = name,
+            owner = uid,
+            description = description,
+            location = location,
+            rules = rules,
+        )
     }
 
+
+    fun addPhoto (){
+        //todo: when function is called and picture is given an image will be added to the campsite (linked via location possibly)
+    }
     fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
         campsite.save(onResult)
     }
