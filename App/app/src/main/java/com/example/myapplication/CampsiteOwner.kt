@@ -33,9 +33,9 @@ class CampsiteOwner : User {
     }
 
     fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").add(campsite.getCampsite())
+        FirebaseFirestore.getInstance().collection("campsites").add(campsite.campsiteToMap)
             .addOnSuccessListener { documentReference ->
-                campsite.id = documentReference.id //capture id for use in lottery
+                campsite.id = documentReference.id
                 onResult("Saved")
             }
             .addOnFailureListener { onResult("Error: ${it.message}") }

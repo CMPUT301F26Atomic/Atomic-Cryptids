@@ -44,7 +44,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     }
 
     //UI
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding()) {
         Text("Create / Edit Lottery", style = MaterialTheme.typography.headlineMedium)
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -56,7 +56,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { //close dropdown if user clicks outside of menu
                 allCampsites.forEach { campsite -> //clickable row for each item
                     DropdownMenuItem(
-                        text = { Text(campsite.name) },
+                        text = { Text(campsite.getName()) },
                         onClick = {
                             expanded = false //close menu when item is selected
                             if (!selectedCampsites.any { it.id == campsite.id }) { //check if clicked campsite has already been selected
@@ -83,7 +83,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Selected Campsites:", style = MaterialTheme.typography.titleMedium)
-        selectedCampsites.forEach { Text("- ${it.name}") } //display chosen campsite name
+        selectedCampsites.forEach { Text("- ${it.getName()}") } //display chosen campsite name
 
         Spacer(modifier = Modifier.height(16.dp))
 

@@ -2,8 +2,11 @@ package com.example.myapplication
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -30,7 +33,7 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     var lastCampsite by remember { mutableStateOf<Campsite?>(null) }
     var qrMessage by remember { mutableStateOf("") }
 
-    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
+    Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Button(
             onClick = {
                 // Possible bug where the user object becomes null causing the app to crash
@@ -77,14 +80,14 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
 
         lastCampsite?.let { campsite ->
             Button(onClick = { qrMessage = campsite.generateQRCode() }) {
-                Text("Generate QR code for ${campsite.name}")
+                Text("Generate QR code for ${campsite.getName()}")
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
     //To Lottery Screen
-    Button(onClick = { navController.navigate("Lottery") }) {
+    Button(onClick = { navController.navigate("lottery") }) {
         Text("Lotteries")
     }
   }

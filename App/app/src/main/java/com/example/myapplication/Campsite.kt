@@ -5,7 +5,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class Campsite(
     var id: String = "",
-    val name: String,
+    private val name: String,
     private val capacity: Int,
     private val owner: String,
     private val description: String,
