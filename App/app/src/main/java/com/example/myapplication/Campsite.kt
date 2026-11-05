@@ -26,61 +26,86 @@ class Campsite(
     private val description: String,
     private val location: String,
     private val rules: String = "",
+    private val availableStartDate: Long? = null,
+    private val availableEndDate: Long? = null,
 ) {
     private val participants = mutableStateListOf<String>()
 
-    val campsiteToMap: Map<String, Any>
-        get() = mapOf(
-            "capacity" to capacity,
-            "name" to name,
-            "owner" to owner,
-            "description" to description,
-            "location" to location,
-            "rules" to rules,
-            "occupancy" to participants.size
-        )
+    val campsiteToMap: Map<String, Any?>
+        get() = buildMap {
+            put("capacity", capacity)
+            put("name", name)
+            put("owner", owner)
+            put("description", description)
+            put("location", location)
+            put("rules", rules)
+            put("occupancy", participants.size)
 
-    fun generateQRCode(): String {
-        return "QR Code"
-    }
+            availableStartDate?.let {
+                put("availableStartDate", it)
+            }
 
-    fun addParticipant(name: String) {
-        if (participants.size < capacity) {
-            participants.add(name)
+            availableEndDate?.let {
+                put("availableEndDate", it)
+            }
         }
-    }
+            /**
+             * Checks whether the campsite is available on a specified date.
+             *
+             * The start date is inclusive and the end date is exclusive.
+             * Returns false if the campsite has no availability dates specified.
+             *
+             * @param date The date to check, in milliseconds.
+             * @return True if the date is within the campsite's availability,
+             */
+            fun isAvailableOn(date: Long): Boolean {
+                val start = availableStartDate ?: return false
+                val end = availableEndDate ?: return false
 
-    fun getCapacity(): Int {
-        return capacity
-    }
+                return date >= start && date < end
+            }
 
-    fun getName(): String {
-        return name
-    }
+            fun generateQRCode(): String {
+                return "QR Code"
+            }
 
-    fun getOwner(): String {
-        return owner
-    }
+            fun addParticipant(name: String) {
+                if (participants.size < capacity) {
+                    participants.add(name)
+                }
+            }
 
-    fun getDescription(): String {
-        return description
-    }
+            fun getCapacity(): Int {
+                return capacity
+            }
 
-    fun getLocation(): String {
-        return location
-    }
+            fun getName(): String {
+                return name
+            }
 
-    fun getRules(): String {
-        return rules
-    }
+            fun getOwner(): String {
+                return owner
+            }
 
-    fun getOccupancy(): Int {
-        return participants.size
-    }
+            fun getDescription(): String {
+                return description
+            }
 
-    fun save(onResult: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").add(campsiteToMap)
-            .addOnSuccessListener { onResult("Saved") }
-            .addOnFailureListener { onResult("Error: ${it.message}") }
-    }
-}
+            fun getLocation(): String {
+                return location
+            }
+
+            fun getRules(): String {
+                return rules
+            }
+
+            fun getOccupancy(): Int {
+                return participants.size
+            }
+
+            fun save(onResult: (String) -> Unit) {
+                FirebaseFirestore.getInstance().collection("campsites").add(campsiteToMap)
+                    .addOnSuccessListener { onResult("Saved") }
+                    .addOnFailureListener { onResult("Error: ${it.message}") }
+            }
+        }

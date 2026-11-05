@@ -30,8 +30,32 @@ class CampsiteOwner : User {
     }
 
 
-    fun createCampsite(name: String, description: String, location: String, capacity: Int, rules: String): Campsite {
+    /**
+     * Creates a campsite with the specified details and availability dates.
+     *
+     * Associates the campsite with the currently authenticated Firebase user.
+     * The availability start date is inclusive and the end date is exclusive.
+     *
+     * @param name Name of the campsite.
+     * @param description Description of the campsite.
+     * @param location Location of the campsite.
+     * @param capacity Maximum number of guests.
+     * @param rules Rules associated with the campsite.
+     * @param availableStartDate First available date in UTC milliseconds.
+     * @param availableEndDate Exclusive end date in UTC milliseconds.
+     * @return The newly created Campsite object.
+     */
+    fun createCampsite(
+        name: String,
+        description: String,
+        location: String,
+        capacity: Int,
+        rules: String,
+        availableStartDate: Long,
+        availableEndDate: Long
+    ): Campsite {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
         return Campsite(
             capacity = capacity,
             name = name,
@@ -39,6 +63,8 @@ class CampsiteOwner : User {
             description = description,
             location = location,
             rules = rules,
+            availableStartDate = availableStartDate,
+            availableEndDate = availableEndDate
         )
     }
 

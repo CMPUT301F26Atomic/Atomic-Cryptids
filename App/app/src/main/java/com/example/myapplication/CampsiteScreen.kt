@@ -28,6 +28,7 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, camper: Cam
     var message by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxWidth()) {
+        Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = {
                 navController.popBackStack()
