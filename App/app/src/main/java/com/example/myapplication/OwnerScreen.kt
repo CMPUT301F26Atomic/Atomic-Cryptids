@@ -21,6 +21,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.TextButton
 
 @Composable
 
@@ -33,6 +37,10 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     var status by remember { mutableStateOf("") }
     var lastCampsite by remember { mutableStateOf<Campsite?>(null) }
     var qrMessage by remember { mutableStateOf("") }
+    var availableStartDate by remember { mutableStateOf<Long?>(null) }
+    var availableEndDate by remember { mutableStateOf<Long?>(null) }
+    var showStartDatePicker by remember { mutableStateOf(false) }
+    var showEndDatePicker by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Button(
@@ -65,16 +73,124 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
                 onValueChange = { capacity = it },
                 label = { Text("Capacity") })
             Spacer(modifier = Modifier.height(16.dp))
-            TextField(value = rules, onValueChange = { rules = it }, label = { Text("Rules") })
+            TextField(value = rules,
+                onValueChange = { rules = it },
+                label = { Text("Rules") }
+            )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                    onClick = { showStartDatePicker = true }
+                    ) {
+                Text(
+                    availableStartDate?.let {
+                        java.text.SimpleDateFormat(
+                            "MMM dd, yyyy",
+                            java.util.Locale.getDefault()
+                        ).apply {
+                            timeZone = java.util.TimeZone.getTimeZone("UTC")
+                        }.format(java.util.Date(it))
+                    } ?: "Available from"
+                )
+            }
+
+                if (showStartDatePicker) {
+                    val datePickerState = rememberDatePickerState(
+                        initialSelectedDateMillis = availableStartDate
+                    )
+
+                    DatePickerDialog(
+                        onDismissRequest = { showStartDatePicker = false },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    availableStartDate = datePickerState.selectedDateMillis
+                                    showStartDatePicker = false
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(
+                                onClick = { showStartDatePicker = false }
+                            ) {
+                                Text("Cancel")
+                            }
+                        }
+                    ) {
+                        DatePicker(state = datePickerState)
+                    }
+                }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Button(
+                onClick = { showEndDatePicker = true }
+            ) {
+                Text(
+                    availableEndDate?.let {
+                        java.text.SimpleDateFormat(
+                            "MMM dd, yyyy",
+                            java.util.Locale.getDefault()
+                        ).apply {
+                            timeZone = java.util.TimeZone.getTimeZone("UTC")
+                        }.format(java.util.Date(it))
+                    } ?: "Available through"
+                )
+            }
+            if (showEndDatePicker) {
+                val datePickerState = rememberDatePickerState(
+                    initialSelectedDateMillis = availableEndDate
+                )
+
+                DatePickerDialog(
+                    onDismissRequest = { showEndDatePicker = false },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                availableEndDate = datePickerState.selectedDateMillis
+                                showEndDatePicker = false
+                            }
+                        ) {
+                            Text("OK")
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showEndDatePicker = false }
+                        ) {
+                            Text("Cancel")
+                        }
+                    }
+                ) {
+                    DatePicker(state = datePickerState)
+                }
+            }
         }
 
         Button(onClick = {
+            val start = availableStartDate
+            val end = availableEndDate
+
+            if (start == null || end == null) {
+                status = "Please select both availability dates."
+                return@Button
+            }
+
+            if (end < start) {
+                status = "End date cannot be before start date."
+                return@Button
+            }
+
             val campsite = owner.createCampsite(
                 name,
                 description,
                 location,
                 capacity.toIntOrNull() ?: 0,
-                rules
+                rules,
+                start,
+                end + 86_400_000L
             )
             status = "Saving..."
             owner.postCampsite(campsite) { status = it }

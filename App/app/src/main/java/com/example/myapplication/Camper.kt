@@ -34,6 +34,17 @@ class Camper: User {
             .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
     }
     //AI
+
+    /**
+     * Retrieves all campsites from Firestore.
+     *
+     * Converts each campsite document into a Campsite object,
+     * including its location, capacity, and availability dates.
+     * Campsites are returned without filtering.
+     *
+     * @param onResult Callback that receives the list of retrieved campsites.
+     * @param onError Callback that receives an error message if retrieval fails.
+     */
     fun searchCampsites(onResult: (List<Campsite>) -> Unit, onError: (String) -> Unit) {
         FirebaseFirestore.getInstance().collection("campsites").get()
             .addOnSuccessListener { result ->
@@ -44,7 +55,9 @@ class Camper: User {
                         owner = doc.getString("owner") ?: "",
                         description = doc.getString("description") ?: "",
                         rules = doc.getString("rules") ?: "",
-                        location = doc.getString("location") ?: ""
+                        location = doc.getString("location") ?: "",
+                        availableStartDate = doc.getLong("availableStartDate"),
+                        availableEndDate = doc.getLong("availableEndDate")
                     )
                 }
                 onResult(campsites)

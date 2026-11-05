@@ -27,7 +27,8 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun FilterMenu(
     menuData: List<String>,
-    filters: List<String>
+    selectedLocation: String?,
+    onLocationSelected: (String?) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
 
@@ -38,16 +39,26 @@ fun FilterMenu(
         Button(
             onClick = { expanded = !expanded }
         ) {
-            Text("Location")
+            Text(selectedLocation ?: "Location")
         }
         DropdownMenu(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
+            DropdownMenuItem(
+                text = { Text("All locations") },
+                onClick = {
+                    onLocationSelected(null)
+                    expanded = false
+                }
+            )
             menuData.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(option) },
-                    onClick = { /* TODO implement */ }
+                    onClick = {
+                        onLocationSelected(option)
+                        expanded = false
+                    }
                 )
             }
         }
