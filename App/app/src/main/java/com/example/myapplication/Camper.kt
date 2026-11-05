@@ -50,6 +50,7 @@ class Camper: User {
             .addOnSuccessListener { result ->
                 val campsites = result.documents.map { doc ->
                     Campsite(
+                        id = doc.id,
                         capacity = (doc.getLong("capacity") ?: 0).toInt(),
                         name = doc.getString("name") ?: "",
                         owner = doc.getString("owner") ?: "",

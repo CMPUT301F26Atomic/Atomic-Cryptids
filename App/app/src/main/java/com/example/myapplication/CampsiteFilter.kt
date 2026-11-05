@@ -33,5 +33,3 @@ fun filterCampsites(
     }
 }
 
-class CampsiteFilter {
-}

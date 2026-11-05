@@ -173,6 +173,13 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
             val start = availableStartDate
             val end = availableEndDate
 
+            val validCapacity = capacity.toIntOrNull()
+
+            if (validCapacity == null || validCapacity <= 0) {
+                status = "Capacity must be a positive whole number."
+                return@Button
+            }
+
             if (start == null || end == null) {
                 status = "Please select both availability dates."
                 return@Button
@@ -187,20 +194,29 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
                 name,
                 description,
                 location,
-                capacity.toIntOrNull() ?: 0,
+                validCapacity,
                 rules,
                 start,
                 end + 86_400_000L
             )
             status = "Saving..."
-            owner.postCampsite(campsite) { status = it }
-            lastCampsite = campsite
-            qrMessage = ""
-            name = ""
-            location = ""
-            description = ""
-            capacity = ""
-            rules = ""
+
+            owner.postCampsite(campsite) { result ->
+                status = result
+
+                if (result == "Saved") {
+                    lastCampsite = campsite
+                    qrMessage = ""
+
+                    name = ""
+                    location = ""
+                    description = ""
+                    capacity = ""
+                    rules = ""
+                    availableStartDate = null
+                    availableEndDate = null
+                }
+            }
         }) { Text("Add campsite") }
 
         Spacer(modifier = Modifier.height(16.dp))
