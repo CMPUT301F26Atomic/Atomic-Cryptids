@@ -79,5 +79,8 @@ fun CampsiteApp() {
         composable("myreservations") {
             MyReservationsScreen(navController)
         }
+        composable("ownerreservations") {
+            OwnerReservationsScreen(navController)
+        }
     }
 }
