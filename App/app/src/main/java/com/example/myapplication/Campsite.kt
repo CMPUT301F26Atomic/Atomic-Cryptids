@@ -17,6 +17,11 @@ associations with lottery
 associate with owner
  */
 
+/**
+ * Represents a campsite with all its attributes
+ * list of participants keep track of how many people are booked
+ */
+
 class Campsite(
     var id: String = "",
     private val name: String,
