@@ -10,7 +10,7 @@ During our group meeting at the beginning of the week, we agreed that two member
 
 ## 26 Oct – 3 Nov
 
-Each member was assigned a minimum of six issues, bringing the total to 30. Members could take on additional issues once they completed their initial issues.
+Each member was assigned a minimum of five issues, bringing the total to 30. Members could take on additional issues once they completed their initial issues, and collaboration on issues was encouraged.
 
 ### Seps
 
@@ -52,10 +52,15 @@ Each member was assigned a minimum of six issues, bringing the total to 30. Memb
 
 ### Colton
 
-- US 02.04.04
-- US 02.03.01
-- US 02.01.04
-- US 02.01.03
+- US 02.04.04 
+- US 02.03.01 
+- US 02.01.04 
+- US 02.01.03 
+- US 02.04.06 
+- US 01.01.02 
+- US 01.01.03 
+- US 01.01.04 
+- US 01.01.05 
 
 ## 3–6 Nov
 
