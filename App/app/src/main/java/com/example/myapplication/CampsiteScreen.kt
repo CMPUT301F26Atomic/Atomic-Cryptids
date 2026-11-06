@@ -46,6 +46,22 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, camper: Cam
 
         Text(message)
 
+        Button(onClick = {
+            camper.joinWaitlist(campsite) { result ->
+                message = result
+            }
+        }) {
+            Text("Join waiting list")
+        }
+
+        Button(onClick = {
+            camper.leaveWaitlist(campsite) { result ->
+                message = result
+            }
+        }) {
+            Text("Leave waiting list")
+        }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Capacity: ${campsite.getCapacity()}")

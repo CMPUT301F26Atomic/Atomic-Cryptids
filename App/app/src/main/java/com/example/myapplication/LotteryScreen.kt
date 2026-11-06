@@ -28,7 +28,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     // fetch campsite
     LaunchedEffect(ownerUid) {
         db.collection("campsites")
-            .whereEqualTo("owner", "owner").get() //only use campsites belonging to user
+            .whereEqualTo("owner", ownerUid).get() //only use campsites belonging to user
             .addOnSuccessListener { snapshot ->
                 allCampsites = snapshot.documents.mapNotNull { doc -> //loop through all elements returned by firebase, skip all null values
                     val rawName = doc.getString("name") ?: ""

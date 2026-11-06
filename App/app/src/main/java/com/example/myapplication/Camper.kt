@@ -77,4 +77,70 @@ class Camper: User {
                 .addOnFailureListener { Log.e("User", "joinLottery failed", it) }
         }
     }
+
+    // US 01.02.01 Join waiting list
+    fun joinWaitlist(campsite: Campsite, onResult: (String) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            onResult("You are not signed in")
+            return
+        }
+        val uid = user.uid
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("lotteries")
+            .whereArrayContains("campsiteIds", campsite.id)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    onResult("This campsite has no lottery")
+                    return@addOnSuccessListener
+                }
+
+                val lottery = result.documents[0]
+                lottery.reference.update("waitlist", FieldValue.arrayUnion(uid))
+                    .addOnSuccessListener {
+                        onResult("Joined waiting list")
+                    }
+                    .addOnFailureListener { error ->
+                        onResult("Could not join: " + error.message)
+                    }
+            }
+            .addOnFailureListener { error ->
+                onResult("Could not find lottery: " + error.message)
+            }
+    }
+
+    // US 01.02.02 Leave waiting list
+    fun leaveWaitlist(campsite: Campsite, onResult: (String) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            onResult("You are not signed in")
+            return
+        }
+        val uid = user.uid
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("lotteries")
+            .whereArrayContains("campsiteIds", campsite.id)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    onResult("This campsite has no lottery")
+                    return@addOnSuccessListener
+                }
+
+                val lottery = result.documents[0]
+                lottery.reference.update("waitlist", FieldValue.arrayRemove(uid))
+                    .addOnSuccessListener {
+                        onResult("Left waiting list")
+                    }
+                    .addOnFailureListener { error ->
+                        onResult("Could not leave: " + error.message)
+                    }
+            }
+            .addOnFailureListener { error ->
+                onResult("Could not find lottery: " + error.message)
+            }
+    }
 }
