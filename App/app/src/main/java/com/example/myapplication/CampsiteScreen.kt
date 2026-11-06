@@ -15,16 +15,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
+import com.atomiccryptids.campsiteapp.User
 
 /**
  * Screen that displays campsite details
  *
  * @param navController controller used for navigating between screens
  * @param campsite campsite object which the details are for
- * @param camper the camper viewing the campsite, used to join its lottery
+ * @param user the user viewing the campsite, if camper they can its lottery
  */
 @Composable
-fun CampsiteScreen(navController: NavController, campsite: Campsite, camper: Camper) {
+fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User) {
     var message by remember { mutableStateOf("") }
 
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -39,29 +40,35 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, camper: Cam
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-            camper.joinLottery(campsite) { result ->
-                message = result
+        if (user is Camper) {
+            Button(onClick = {
+                user.joinLottery(campsite) { result ->
+                    message = result
+                }
+            }) {
+                Text("Join Lottery")
             }
-        }) { Text("Join Lottery") }
+
+            Button(onClick = {
+                user.joinWaitlist(campsite) { result ->
+                    message = result
+                }
+            }) {
+                Text("Join waiting list")
+            }
+
+            Button(onClick = {
+                user.leaveWaitlist(campsite) { result ->
+                    message = result
+                }
+            }) {
+                Text("Leave waiting list")
+            }
+        }
 
         Text(message)
 
-        Button(onClick = {
-            camper.joinWaitlist(campsite) { result ->
-                message = result
-            }
-        }) {
-            Text("Join waiting list")
-        }
-
-        Button(onClick = {
-            camper.leaveWaitlist(campsite) { result ->
-                message = result
-            }
-        }) {
-            Text("Leave waiting list")
-        }
+        
 
         Spacer(modifier = Modifier.height(16.dp))
 

@@ -18,6 +18,7 @@ import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 
 /**
@@ -29,10 +30,11 @@ import androidx.compose.ui.unit.dp
  * @param admin object for user accessing
  */
 @Composable
-fun AdminScreen(navController: NavController, admin: Admin) {
+fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (Campsite) -> Unit) {
 
     var message by remember { mutableStateOf("") }
     var campers by remember { mutableStateOf<List<Camper>?>(null) }
+    var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
 
@@ -52,7 +54,8 @@ fun AdminScreen(navController: NavController, admin: Admin) {
             onClick = {
                 message = ""
                 admin.getCampers({ campers = it }, {message = it})
-            }
+            },
+            modifier = Modifier.testTag("viewCampers")
         ) {
             Text("View camper profiles")
         }
@@ -62,13 +65,32 @@ fun AdminScreen(navController: NavController, admin: Admin) {
 
         campers?.forEach { camper ->
             Button(
-                onClick = {
-                    navController.navigate("login") {
-                        popUpTo(0)
-                    }
-                }
+                onClick = { /* TODO implement */ },
+                modifier = Modifier.testTag("camper")
             ) {
                 Text("Camper")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
+
+        Button(
+            onClick = {
+                message = ""
+                admin.searchCampsites({ campsites = it }, {message = it})
+            },
+            modifier = Modifier.testTag("viewCampsites")
+        ) {
+            Text("View campsites")
+        }
+        Text(message)
+
+        campsites?.forEach { campsite ->
+            Button(onClick = {
+                onSelectCampsite(campsite)
+                navController.navigate("campsite")
+            }) {
+                Text("${campsite.getName()} - ${campsite.getLocation()}")
             }
 
             Spacer(modifier = Modifier.height(16.dp))

@@ -102,14 +102,15 @@ fun CampsiteApp() {
         composable("admin") {
             AdminScreen(
                 navController,
-                user as Admin
+                user as Admin,
+                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
             )
         }
         composable("campsite") {
             CampsiteScreen(
                 navController,
                 campsite as Campsite,
-                user as Camper
+                user as User
             )
         }
         composable("lottery") {
