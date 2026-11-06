@@ -12,6 +12,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
@@ -24,7 +25,7 @@ fun LoginScreen(navController: NavController, onSelectCamper: () -> Unit, onSele
             onSelectCamper()
             navController.navigate("home")
         },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.testTag("camperLoginButton")
         ) {
             Text("Camper")
         }
@@ -33,7 +34,7 @@ fun LoginScreen(navController: NavController, onSelectCamper: () -> Unit, onSele
             onSelectOwner()
             navController.navigate("home")
         },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.testTag("ownerLoginButton")
         ){
             Text("Campsite owner")
         }
@@ -44,7 +45,7 @@ fun LoginScreen(navController: NavController, onSelectCamper: () -> Unit, onSele
             onSelectAdmin()
             navController.navigate("home")
         },
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.testTag("adminLoginButton")
         ) {
             Text("Admin")
         }
