@@ -56,6 +56,19 @@ fun CampsiteApp() {
                 },
                 onEdit = {
                     navController.navigate("edit-owner-campsite")
+                },
+                onWaitList = {
+                    navController.navigate("owner-waitlist")
+                }
+            )
+        }
+
+        composable("owner-waitlist") {
+            OwnerWaitlistScreen(
+                campsite = campsite as Campsite,
+                owner = user as CampsiteOwner,
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }

@@ -23,7 +23,8 @@ import com.atomiccryptids.campsiteapp.Reservation
 fun OwnerCampsiteDetailsScreen(
     campsite: Campsite,
     onBack: () -> Unit,
-    onEdit: () -> Unit
+    onEdit: () -> Unit,
+    onWaitList: () -> Unit
 ) {
     var bookedReservations by remember { mutableStateOf<List<Reservation>>(emptyList()) }
     var bookedStatus by remember { mutableStateOf("") }
@@ -49,6 +50,10 @@ fun OwnerCampsiteDetailsScreen(
 
         Button(onClick = onEdit) {
             Text("Edit Campsite")
+        }
+
+        Button(onClick = onWaitList) {
+            Text("Waiting List")
         }
 
         Text(

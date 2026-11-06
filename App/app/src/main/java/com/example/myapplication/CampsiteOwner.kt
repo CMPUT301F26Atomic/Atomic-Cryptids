@@ -185,4 +185,28 @@ class CampsiteOwner : User {
             .addOnSuccessListener { onResult("Lottery Created!") }
             .addOnFailureListener { Log.e("Lottery", "Failed", it) }
     }
+
+    fun getWaitlist(campsite: Campsite, onResult: (List<String>) -> Unit, onError: (String) -> Unit) {
+
+        // This block of code was written with help from Claude, prompted with:
+        // "How do I find a Firestore document that has a certain value in one of its lists"
+        // (followed the outline from joinWaitlist)
+        val db = FirebaseFirestore.getInstance()
+        db.collection("lotteries")
+            .whereArrayContains("campsiteIds", campsite.id)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    onError("This campsite has no lottery")
+                    return@addOnSuccessListener
+                }
+
+                val lottery = result.documents[0]
+                val waitlist = lottery.get("waitlist") as? List<*> ?: emptyList<String>()
+                onResult(waitlist.map { it.toString() })
+            }
+            .addOnFailureListener { error ->
+                onError("Could not find lottery: " + error.message)
+            }
+    }
 }
