@@ -9,13 +9,45 @@
 * Luke Frayne
 
 ## AI Tools
-No AI or generative LLMs were used during the project.
+
 
 ## Project Documentation
 All design deliverables, user stories, mockups, and CRC cards can be found on our [Wiki Page](https://github.com/CMPUT301F26Atomic/Atomic-Cryptids/wiki)
 
 
 ## Android Application Setup
+
+### Claude:
+
+#### Prompt: 
+   val campers: MutableList<Camper> = mutableListOf()
+   class Camper: User {
+
+    private val userLotteries: MutableList<Campsite> = mutableListOf()
+    override val role = "camper"
+
+    override fun optNotification (boolean: Boolean) : String {
+        if (boolean) {
+            return "user will receive notification"
+        } else {
+            return "no notifications"
+        }
+    }
+    override fun saveUser() {
+	campers.add (Camper)	 
+}
+change the Campsite and User files so that the user and campsite attributes are saved to firebase instead of the mutable Camper type list.
+
+### Answer:
+
+   override fun saveUser() {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        FirebaseFirestore.getInstance().collection("users").document(uid)
+            .set(mapOf("role" to role), SetOptions.merge())
+            .addOnFailureListener { Log.e("User", "saveUser failed", it) }
+    }
+
+
 
 ### Requirements
 
