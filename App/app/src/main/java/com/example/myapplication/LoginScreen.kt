@@ -38,6 +38,7 @@ fun LoginScreen(navController: NavController, onSelectOwner: () -> Unit, onSelec
         ) {
             Text("Camper")
         }
+
     }
 
 }

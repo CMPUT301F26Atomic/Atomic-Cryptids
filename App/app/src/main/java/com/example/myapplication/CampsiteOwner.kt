@@ -8,6 +8,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
 
+/*
+Campsite Owner overrides interface methods, allowing for saving and deleting profile.
+todo optNotification method is not connected to firebase yet
+
+ */
 class CampsiteOwner : User {
     override val role= "campsite owner"
     override fun optNotification (boolean: Boolean): String {

@@ -73,6 +73,10 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner, onSelectCamp
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Button(onClick = { navController.navigate("ownerreservations") }) { Text("View reservations") }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Column {
             TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
             Spacer(modifier = Modifier.height(16.dp))
