@@ -95,6 +95,9 @@ class Camper: User {
         }
         val uid = user.uid
 
+        // This block of code was written with help from Claude, prompted with:
+        // "How do I find a Firestore document that has a certain value in one of its lists"
+        // (followed the outline from joinWaitlist)
         val db = FirebaseFirestore.getInstance()
         db.collection("lotteries")
             .whereArrayContains("campsiteIds", campsite.id)
@@ -150,6 +153,8 @@ class Camper: User {
         }
         val uid = user.uid
 
+        // This block of code was written with help from Claude, prompted with:
+        // "How do I find a Firestore document that has a certain value in one of its lists"
         val db = FirebaseFirestore.getInstance()
         db.collection("lotteries")
             .whereArrayContains("campsiteIds", campsite.id)
@@ -220,6 +225,9 @@ class Camper: User {
         }
         val uid = user.uid
 
+        // This block of code was written with help from Claude, prompted with:
+        // "How do I find a Firestore document that has a certain value in one of its lists"
+        // (followed the outline from joinWaitlist)
         val db = FirebaseFirestore.getInstance()
         db.collection("lotteries")
             .whereArrayContains("campsiteIds", campsite.id)
