@@ -14,7 +14,7 @@ interface User {
     fun optNotification(boolean: Boolean): String {
         return if (boolean) "user will receive notification" else "user won't receive notifications"
         /*
-        I am too tired and its late. I'll fix this part later
+        I am too tired and it's late. I'll fix this part later
          */
     }
     fun deleteProfile(){}

@@ -13,27 +13,47 @@ class Camper: User {
     private val userLotteries: MutableList<Campsite> = mutableListOf()
     override val role = "camper"
 
+    /**
+     * @param boolean is the state of the user's optnotification setting.
+     * If true, user will receive notifications and this information will be recorded in firebase.
+     */
+
     override fun optNotification (boolean: Boolean) : String {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (uid != null) {
+            FirebaseFirestore.getInstance().collection("users").document(uid)
+                .set(mapOf("notifications" to boolean), SetOptions.merge())
+                .addOnFailureListener { Log.e("User", "optNotification failed", it) }
+        }
         if (boolean) {
             return "user will receive notification"
         } else {
             return "no notifications"
         }
     }
+    /**
+    saves current users attributes to firebase under collection users.
+    It records the role of the user.
+    prints error message if save fails
+     */
     override fun saveUser() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         FirebaseFirestore.getInstance().collection("users").document(uid)
             .set(mapOf("role" to role), SetOptions.merge())
             .addOnFailureListener { Log.e("User", "saveUser failed", it) }
     }
-
+    /**
+    deletes current users profile from firebase.
+    prints error message if delete fails
+    possible source of error: if camper and owner have same name
+     */
     override fun deleteProfile() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         FirebaseFirestore.getInstance().collection("users").document(uid)
             .delete()
             .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
     }
-    //AI
+
 
     /**
      * Retrieves all campsites from Firestore.

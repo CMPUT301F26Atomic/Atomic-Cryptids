@@ -18,7 +18,14 @@ import androidx.compose.ui.unit.dp
 
 /*
 moved the toggle notification and delete profile to a profile setting view function
-todo create a settign button in camperScreen that directs user to here
+ */
+
+/**
+ * helper function that creates camper profile setting screen
+ * @param camper the camper viewing the profile
+ * @param onBack callback to navigate back to previous screen
+ * @param onDeleted callback to navigate to login screen after profile is deleted
+ * @param modifier modifier to apply to the layout
  */
 @Composable
 fun CamperProfileSetting(
