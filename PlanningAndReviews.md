@@ -32,6 +32,11 @@ Each member was assigned a minimum of six issues, bringing the total to 30. Memb
 
 ### Mason
 
+- US 01.01.02
+- US 01.01.03
+- US 01.01.04
+- US 01.01.05
+- US 03.04.01
 - US 03.05.01
 
 ### Kush
