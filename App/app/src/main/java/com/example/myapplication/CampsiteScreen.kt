@@ -16,6 +16,8 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
+import androidx.compose.runtime.LaunchedEffect
+import com.google.firebase.firestore.FirebaseFirestore
 
 /**
  * Screen that displays campsite details
@@ -27,6 +29,20 @@ import com.atomiccryptids.campsiteapp.User
 @Composable
 fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User) {
     var message by remember { mutableStateOf("") }
+
+    var lotteryDetails by remember {
+        mutableStateOf<Map<String, Any>?>(null)
+    }
+
+    LaunchedEffect(campsite.id) {
+        FirebaseFirestore.getInstance()
+            .collection("lotteries")
+            .whereArrayContains("campsiteIds", campsite.id)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                lotteryDetails = snapshot.documents.firstOrNull()?.data
+            }
+    }
 
     Column(modifier = Modifier.fillMaxWidth()) {
         Spacer(modifier = Modifier.height(24.dp))
@@ -72,6 +88,33 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
 
         Spacer(modifier = Modifier.height(16.dp))
 
+
+        lotteryDetails?.let { lottery ->
+            Text("Lottery Details")
+
+            Text("Number of winners: ${lottery["numberOfWinners"] ?: "N/A"}")
+
+            Text("Lottery capacity: ${lottery["capacity"] ?: "N/A"}")
+
+            val startDate = lottery["startDate"] as? Long
+            val endDate = lottery["endDate"] as? Long
+
+            Text(
+                "Start date: ${
+                    startDate?.let { java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(java.util.Date(it)) }
+                        ?: "N/A"
+                }"
+            )
+
+            Text(
+                "End date: ${
+                    endDate?.let { java.text.SimpleDateFormat("MMM dd, yyyy", java.util.Locale.getDefault()).format(java.util.Date(it)) }
+                        ?: "N/A"
+                }"
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
         Text("Capacity: ${campsite.getCapacity()}")
 
         Spacer(modifier = Modifier.height(16.dp))

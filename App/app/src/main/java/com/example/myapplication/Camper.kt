@@ -64,7 +64,7 @@ class Camper: User {
      * @param onResult Callback that receives the list of retrieved campsites.
      * @param onError Callback that receives an error message if retrieval fails.
      */
-    fun searchCampsites(onResult: (List<Campsite>) -> Unit, onError: (String) -> Unit) {
+    override fun searchCampsites(onResult: (List<Campsite>) -> Unit, onError: (String) -> Unit) {
         FirebaseFirestore.getInstance().collection("campsites").get()
             .addOnSuccessListener { result ->
                 val campsites = result.documents.map { doc ->

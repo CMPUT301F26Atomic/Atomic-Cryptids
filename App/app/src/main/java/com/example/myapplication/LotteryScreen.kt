@@ -32,6 +32,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
     var isConfirming by remember { mutableStateOf(false) }
+    var drawCompleted by remember { mutableStateOf(false) }
 
     val db = FirebaseFirestore.getInstance()
 
@@ -84,6 +85,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                         if (!snap.isEmpty) {
                                             val lot = snap.documents[0]
                                             existingLotteryId = lot.id
+                                            drawCompleted = lot.getBoolean("drawCompleted") ?: false
                                             winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
                                             startDateMillis = lot.getLong("startDate")
                                             endDateMillis = lot.getLong("endDate")
@@ -113,6 +115,10 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
 
                 Button(
                     onClick = {
+                        if (drawCompleted && existingLotteryId != null) {
+                            status = "This lottery has already been drawn and cannot be modified."
+                            return@Button
+                        }
                         isConfirming = false
                         selectedCampsites = selectedCampsites.filter { it.id != campsite.id }
                         if (selectedCampsites.isEmpty() && existingLotteryId != null) {
@@ -215,6 +221,11 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Button(onClick = {
+                if (drawCompleted && existingLotteryId != null) {
+                    status = "This lottery has already been drawn and cannot be edited."
+                    isConfirming = false
+                    return@Button
+                }
                 if (!LotteryValidator.isValidWinnerCount(winnersInput)) {
                     status = "Error: Winner count must be a positive whole number."
                     isConfirming = false
@@ -282,8 +293,22 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                 )
 
                                 if (existingLotteryId != null) {
-                                    db.collection("lotteries").document(existingLotteryId!!)
-                                        .update(lotteryData)
+                                    val lotteryRef = db.collection("lotteries").document(existingLotteryId!!)
+
+                                    db.runTransaction { transaction ->
+                                        val snapshot = transaction.get(lotteryRef)
+
+                                        if (snapshot.getBoolean("drawCompleted") == true) {
+                                            throw IllegalStateException("This lottery has already been drawn.")
+                                        }
+
+                                        if (snapshot.getString("ownerId") != ownerUid) {
+                                            throw IllegalStateException("You do not own this lottery.")
+                                        }
+
+                                        transaction.update(lotteryRef, lotteryData)
+                                        null
+                                    }
                                         .addOnSuccessListener {
                                             existingLotteryId = null
                                             selectedCampsites = emptyList()
@@ -293,10 +318,15 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             isConfirming = false
                                             status = "Lottery updated successfully!"
                                         }
+                                        .addOnFailureListener { e ->
+                                            status = "Error updating lottery: ${e.message}"
+                                            isConfirming = false
+                                        }
                                 } else {
                                     val newLotteryData = lotteryData + mapOf(
                                     "entrants" to emptyList<String>(),
-                                    "waitlist" to emptyList<String>()
+                                    "waitlist" to emptyList<String>(),
+                                    "drawCompleted" to false
                                 )
                                     db.collection("lotteries").add(newLotteryData)
                                         .addOnSuccessListener {
