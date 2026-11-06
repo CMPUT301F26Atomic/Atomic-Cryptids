@@ -31,6 +31,9 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var endDateMillis by remember { mutableStateOf<Long?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    var regStartDateMillis by remember { mutableStateOf<Long?>(null) } //registration window open
+    var regEndDateMillis by remember { mutableStateOf<Long?>(null) } //registration window close
+    var showRegPicker by remember { mutableStateOf(false) }
     var isConfirming by remember { mutableStateOf(false) }
     var drawCompleted by remember { mutableStateOf(false) }
 
@@ -89,6 +92,8 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
                                             startDateMillis = lot.getLong("startDate")
                                             endDateMillis = lot.getLong("endDate")
+                                            regStartDateMillis = lot.getLong("registrationStartDate")
+                                            regEndDateMillis = lot.getLong("registrationEndDate")
                                             capacityInput = lot.getLong("capacity")?.toString() ?: ""
                             
                                             status = "Editing existing lottery"
@@ -129,6 +134,8 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                     winnersInput = ""
                                     startDateMillis = null
                                     endDateMillis = null
+                                    regStartDateMillis = null
+                                    regEndDateMillis = null
                                     status = "Lottery deleted because no campsites remain."
                                 }
                                 .addOnFailureListener { e ->
@@ -204,6 +211,40 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
             }
         }
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(onClick = { showRegPicker = true }, modifier = Modifier.fillMaxWidth()) {
+            Text(
+                if (regStartDateMillis != null && regEndDateMillis != null)
+                    "Registration: ${formatUtcDate(regStartDateMillis!!)} - ${formatUtcDate(regEndDateMillis!!)}"
+                else "Set Registration Period"
+            )
+        }
+
+        if (showRegPicker) {
+            val rangeState = rememberDateRangePickerState(
+                initialSelectedStartDateMillis = regStartDateMillis,
+                initialSelectedEndDateMillis = regEndDateMillis
+            )
+            DatePickerDialog(
+                onDismissRequest = { showRegPicker = false },
+                confirmButton = {
+                    TextButton(onClick = {
+                        regStartDateMillis = rangeState.selectedStartDateMillis
+                        regEndDateMillis = rangeState.selectedEndDateMillis
+                        showRegPicker = false
+                        isConfirming = false
+                        status = ""
+                    }) { Text("OK") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showRegPicker = false }) { Text("Cancel") }
+                }
+            ) {
+                DateRangePicker(state = rangeState, modifier = Modifier.weight(1f))
+            }
+        }
+
         //number of winners text box
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -250,6 +291,11 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                     isConfirming = false
                     return@Button
                 }
+                if (!LotteryValidator.isValidPeriod(regStartDateMillis, regEndDateMillis)) {
+                    status = "Error: Registration close date must be after the open date."
+                    isConfirming = false
+                    return@Button
+                }
 
                 if (!LotteryValidator.isValidWinnerCount(capacityInput)) {
                     status = "Error: Capacity count must be a positive whole number."
@@ -289,7 +335,9 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                     "capacity" to capacityInt,
                                     "ownerId" to ownerUid,
                                     "startDate" to startDateMillis!!,
-                                    "endDate" to endDateMillis!!
+                                    "endDate" to endDateMillis!!,
+                                    "registrationStartDate" to regStartDateMillis!!,
+                                    "registrationEndDate" to regEndDateMillis!!
                                 )
 
                                 if (existingLotteryId != null) {
@@ -315,6 +363,8 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             winnersInput = ""
                                             startDateMillis = null
                                             endDateMillis = null
+                                            regStartDateMillis = null
+                                            regEndDateMillis = null
                                             isConfirming = false
                                             status = "Lottery updated successfully!"
                                         }
@@ -335,6 +385,8 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             winnersInput = ""
                                             startDateMillis = null
                                             endDateMillis = null
+                                            regStartDateMillis = null
+                                            regEndDateMillis = null
                                             isConfirming = false
                                             status = "New lottery listing created!"
                                         }

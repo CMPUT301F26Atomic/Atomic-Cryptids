@@ -10,4 +10,13 @@ object LotteryValidator {
         val count = input.toIntOrNull()
         return count != null && count > 0
     }
+
+    fun isValidPeriod(startMillis: Long?, endMillis: Long?): Boolean {
+        return startMillis != null && endMillis != null && endMillis > startMillis
+    }
+
+    fun isRegistrationOpen(nowMillis: Long, registrationStart: Long?, registrationEnd: Long?): Boolean {
+        return registrationStart != null && registrationEnd != null &&
+            nowMillis >= registrationStart && nowMillis < registrationEnd
+    }
 }
