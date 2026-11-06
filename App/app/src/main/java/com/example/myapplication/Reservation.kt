@@ -94,6 +94,24 @@ data class Reservation(
             )
         }.getOrNull()
 
+        fun fetchActiveForCampsite(
+            campsiteId: String,
+            onResult: (List<Reservation>) -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            FirebaseFirestore.getInstance().collection(COLLECTION)
+                .whereEqualTo("campsiteId", campsiteId)
+                .whereEqualTo("status", Status.ACTIVE.name)
+                .get()
+                .addOnSuccessListener { result ->
+                    val reservations = result.documents
+                        .mapNotNull { fromMap(it.id, it.data ?: return@mapNotNull null) }
+                        .sortedBy { it.startDateMillis }
+                    onResult(reservations)
+                }
+                .addOnFailureListener { onError("Error: ${it.message}") }
+        }
+
         fun fetchActiveForUser(
             userId: String,
             onResult: (List<Reservation>) -> Unit,
