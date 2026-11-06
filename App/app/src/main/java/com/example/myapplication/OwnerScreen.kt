@@ -25,10 +25,11 @@ import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.TextButton
+import androidx.compose.runtime.LaunchedEffect
 
 @Composable
 
-fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
+fun OwnerScreen(navController: NavController, owner: CampsiteOwner, onSelectCampsite: (Campsite) -> Unit) {
     var name by remember { mutableStateOf("") }
     var location by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -41,7 +42,24 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
     var availableEndDate by remember { mutableStateOf<Long?>(null) }
     var showStartDatePicker by remember { mutableStateOf(false) }
     var showEndDatePicker by remember { mutableStateOf(false) }
+    var ownedCampsites by remember { mutableStateOf<List<Campsite>>(emptyList()) }
+    var isLoadingCampsites by remember { mutableStateOf(true) }
+    var campsiteListError by remember { mutableStateOf("") }
 
+
+
+    LaunchedEffect(Unit) {
+        owner.getOwnedCampsites(
+            onResult = { campsites ->
+                ownedCampsites = campsites
+                isLoadingCampsites = false
+            },
+            onError = { error ->
+                campsiteListError = error
+                isLoadingCampsites = false
+            }
+        )
+    }
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
         Button(
             onClick = {
@@ -207,7 +225,7 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
                 if (result == "Saved") {
                     lastCampsite = campsite
                     qrMessage = ""
-
+                    ownedCampsites = ownedCampsites + campsite
                     name = ""
                     location = ""
                     description = ""
@@ -236,6 +254,42 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner) {
         //To Lottery Screen
         Button(onClick = { navController.navigate("lottery") }) {
             Text("Lotteries")
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text("My Campsites")
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        when {
+            isLoadingCampsites -> {
+                Text("Loading campsites...")
+            }
+
+            campsiteListError.isNotEmpty() -> {
+                Text(campsiteListError)
+            }
+
+            ownedCampsites.isEmpty() -> {
+                Text("You haven't created any campsites yet.")
+            }
+
+            else -> {
+                ownedCampsites.forEach { campsite ->
+                    Button(
+                        onClick = {
+                            onSelectCampsite(campsite)
+                            navController.navigate("owner-campsite-details")
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text("${campsite.getName()} - ${campsite.getLocation()}")
+                    }
+
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+            }
         }
     }
 }
