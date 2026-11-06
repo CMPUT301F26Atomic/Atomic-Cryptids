@@ -88,6 +88,10 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        Button(onClick = { navController.navigate("wins") }) { Text("Lottery wins") }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         Button(onClick = {
             message = ""
             camper.searchCampsites({ campsites = it }, { message = it })

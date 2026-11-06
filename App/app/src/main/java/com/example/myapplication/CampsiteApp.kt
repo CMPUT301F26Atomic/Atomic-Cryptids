@@ -64,5 +64,17 @@ fun CampsiteApp() {
                 onBack = { navController.popBackStack() }
             )
         }
+        composable("wins") {
+            LotteryWinsScreen(
+                navController,
+                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
+            )
+        }
+        composable("reserve") {
+            ReserveScreen(
+                navController,
+                campsite as Campsite
+            )
+        }
     }
 }
