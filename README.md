@@ -10,42 +10,20 @@
 
 ## AI Tools
 
+Various generative AI tools such as OpenAI ChatGPT, Anthropic Claude, and Google Gemini were used for development assistant throughout the project to support the following activities:
 
+- Code development: Assisted with implementing and refining Kotlin functionality, including campsite filtering, campsite management, lottery editing, and Firestore integration.
+
+- Debugging: Helped identify compilation errors, resolve Git merge conflicts, and troubleshoot Android Studio and Firebase issues.
+
+- Code review: Reviewed implementations for potential bugs, incomplete functionality, and consistency with user-story acceptance criteria.
+
+Disclosure for specific sections of code can be found within the comments in the kotlin code.
 ## Project Documentation
 All design deliverables, user stories, mockups, and CRC cards can be found on our [Wiki Page](https://github.com/CMPUT301F26Atomic/Atomic-Cryptids/wiki)
 
 
 ## Android Application Setup
-
-### Claude:
-
-#### Prompt: 
-   val campers: MutableList<Camper> = mutableListOf()
-   class Camper: User {
-
-    private val userLotteries: MutableList<Campsite> = mutableListOf()
-    override val role = "camper"
-
-    override fun optNotification (boolean: Boolean) : String {
-        if (boolean) {
-            return "user will receive notification"
-        } else {
-            return "no notifications"
-        }
-    }
-    override fun saveUser() {
-	campers.add (Camper)	 
-}
-change the Campsite and User files so that the user and campsite attributes are saved to firebase instead of the mutable Camper type list.
-
-### Answer:
-
-   override fun saveUser() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(mapOf("role" to role), SetOptions.merge())
-            .addOnFailureListener { Log.e("User", "saveUser failed", it) }
-    }
 
 
 
