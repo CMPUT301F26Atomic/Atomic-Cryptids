@@ -54,6 +54,7 @@ Each member was assigned a minimum of five issues, bringing the total to 30. Mem
 - US 02.04.06
 - US 02.04.02
 - US 02.04.01
+- US 02.04.05
 
 ### Colton
 

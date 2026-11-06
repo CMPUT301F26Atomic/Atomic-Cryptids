@@ -27,10 +27,6 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var capacityInput by remember { mutableStateOf("") } //max people in the lottery
     var status by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var startDateMillis by remember { mutableStateOf<Long?>(null) }
-    var endDateMillis by remember { mutableStateOf<Long?>(null) }
-    var showStartDatePicker by remember { mutableStateOf(false) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
     var regStartDateMillis by remember { mutableStateOf<Long?>(null) } //registration window open
     var regEndDateMillis by remember { mutableStateOf<Long?>(null) } //registration window close
     var showRegPicker by remember { mutableStateOf(false) }
@@ -90,8 +86,6 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             existingLotteryId = lot.id
                                             drawCompleted = lot.getBoolean("drawCompleted") ?: false
                                             winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
-                                            startDateMillis = lot.getLong("startDate")
-                                            endDateMillis = lot.getLong("endDate")
                                             regStartDateMillis = lot.getLong("registrationStartDate")
                                             regEndDateMillis = lot.getLong("registrationEndDate")
                                             capacityInput = lot.getLong("capacity")?.toString() ?: ""
@@ -132,10 +126,9 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                 .addOnSuccessListener {
                                     existingLotteryId = null
                                     winnersInput = ""
-                                    startDateMillis = null
-                                    endDateMillis = null
                                     regStartDateMillis = null
                                     regEndDateMillis = null
+                                    capacityInput = ""
                                     status = "Lottery deleted because no campsites remain."
                                 }
                                 .addOnFailureListener { e ->
@@ -152,64 +145,11 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
 
         TextField(value = capacityInput, onValueChange = {
             capacityInput = it
+            isConfirming = false
             status = ""
         },
             label = { Text("Lottery capacity") }, modifier = Modifier.fillMaxWidth())
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { showStartDatePicker = true }, modifier = Modifier.weight(1f)) {
-                Text(
-                    startDateMillis?.let { formatUtcDate(it) } ?: "Start Date"
-                )
-            }
-            Button(onClick = { showEndDatePicker = true }, modifier = Modifier.weight(1f)) {
-                Text(
-                    endDateMillis?.let { formatUtcDate(it) } ?: "End Date"
-                )
-            }
-        }
-
-        if (showStartDatePicker) {
-            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = startDateMillis)
-            DatePickerDialog(
-                onDismissRequest = { showStartDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        startDateMillis = datePickerState.selectedDateMillis
-                        showStartDatePicker = false
-                        isConfirming = false
-                        status = ""
-                    }) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showStartDatePicker = false }) { Text("Cancel") }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
-
-        if (showEndDatePicker) {
-            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = endDateMillis)
-            DatePickerDialog(
-                onDismissRequest = { showEndDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        endDateMillis = datePickerState.selectedDateMillis
-                        showEndDatePicker = false
-                        isConfirming = false
-                        status = ""
-                    }) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showEndDatePicker = false }) { Text("Cancel") }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -280,17 +220,6 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                     isConfirming = false
                     return@Button
                 }
-                if (startDateMillis == null || endDateMillis == null) {
-                    status = "Error: Please specify both start and end dates for the lottery period."
-                    isConfirming = false
-                    return@Button
-                }
-
-                if (endDateMillis!! <= startDateMillis!!) {
-                    status = "Error: End date must be after start date."
-                    isConfirming = false
-                    return@Button
-                }
                 if (!LotteryValidator.isValidPeriod(regStartDateMillis, regEndDateMillis)) {
                     status = "Error: Registration close date must be after the open date."
                     isConfirming = false
@@ -318,7 +247,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                             if (existingLotteryId != null && doc.id == existingLotteryId) return@any false
                             val existingStart = doc.getLong("startDate") ?: 0L
                             val existingEnd = doc.getLong("endDate") ?: 0L
-                            startDateMillis!! <= existingEnd && endDateMillis!! >= existingStart
+                            regStartDateMillis!! <= existingEnd && regEndDateMillis!! >= existingStart
                         }
 
                         if (hasOverlap) {
@@ -334,8 +263,8 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                     "numberOfWinners" to winnersInt,
                                     "capacity" to capacityInt,
                                     "ownerId" to ownerUid,
-                                    "startDate" to startDateMillis!!,
-                                    "endDate" to endDateMillis!!,
+                                    "startDate" to regStartDateMillis!!,
+                                    "endDate" to regEndDateMillis!!,
                                     "registrationStartDate" to regStartDateMillis!!,
                                     "registrationEndDate" to regEndDateMillis!!
                                 )
@@ -361,11 +290,10 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             existingLotteryId = null
                                             selectedCampsites = emptyList()
                                             winnersInput = ""
-                                            startDateMillis = null
-                                            endDateMillis = null
                                             regStartDateMillis = null
                                             regEndDateMillis = null
                                             isConfirming = false
+                                            capacityInput = ""
                                             status = "Lottery updated successfully!"
                                         }
                                         .addOnFailureListener { e ->
@@ -383,11 +311,10 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             existingLotteryId = null
                                             selectedCampsites = emptyList()
                                             winnersInput = ""
-                                            startDateMillis = null
-                                            endDateMillis = null
                                             regStartDateMillis = null
                                             regEndDateMillis = null
                                             isConfirming = false
+                                            capacityInput = ""
                                             status = "New lottery listing created!"
                                         }
                                 }
