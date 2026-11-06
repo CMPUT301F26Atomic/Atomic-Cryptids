@@ -24,6 +24,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var selectedCampsites by remember { mutableStateOf<List<Campsite>>(emptyList()) } //specific campsite used in current lottery
     var existingLotteryId by remember { mutableStateOf<String?>(null) } //if null make new lottery, if not edit existing
     var winnersInput by remember { mutableStateOf("") } //num of winners
+    var capacityInput by remember { mutableStateOf("") } //max people in the lottery
     var status by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var startDateMillis by remember { mutableStateOf<Long?>(null) }
@@ -86,6 +87,8 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
                                             startDateMillis = lot.getLong("startDate")
                                             endDateMillis = lot.getLong("endDate")
+                                            capacityInput = lot.getLong("capacity")?.toString() ?: ""
+                            
                                             status = "Editing existing lottery"
                                             val lotteryCampsiteIds = lot.get("campsiteIds") as? List<String> ?: emptyList()
                                             val associatedCampsites = allCampsites.filter { it.id in lotteryCampsiteIds }
@@ -133,6 +136,12 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                 }
             }
         }
+
+        TextField(value = capacityInput, onValueChange = {
+            capacityInput = it
+            status = ""
+        },
+            label = { Text("Lottery capacity") }, modifier = Modifier.fillMaxWidth())
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -224,9 +233,24 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                     isConfirming = false
                     return@Button
                 }
+
                 if (endDateMillis!! <= startDateMillis!!) {
                     status = "Error: End date must be after start date."
                     isConfirming = false
+                    return@Button
+                }
+
+                if (!LotteryValidator.isValidWinnerCount(capacityInput)) {
+                    status = "Error: Capacity count must be a positive whole number."
+                    return@Button
+                }
+
+                
+                val capacityInt = capacityInput.toInt()
+                
+
+                if (campsiteIds.isEmpty()) {
+                    status = "Error: Select at least one campsite."
                     return@Button
                 }
                 db.collection("lotteries")
@@ -251,6 +275,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                 val lotteryData = mapOf(
                                     "campsiteIds" to campsiteIds,
                                     "numberOfWinners" to winnersInt,
+                                    "capacity" to capacityInt,
                                     "ownerId" to ownerUid,
                                     "startDate" to startDateMillis!!,
                                     "endDate" to endDateMillis!!
@@ -269,7 +294,10 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             status = "Lottery updated successfully!"
                                         }
                                 } else {
-                                    val newLotteryData = lotteryData + mapOf("waitlist" to emptyList<String>())
+                                    val newLotteryData = lotteryData + mapOf(
+                                    "entrants" to emptyList<String>(),
+                                    "waitlist" to emptyList<String>()
+                                )
                                     db.collection("lotteries").add(newLotteryData)
                                         .addOnSuccessListener {
                                             existingLotteryId = null
