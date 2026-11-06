@@ -42,12 +42,33 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
 
         if (user is Camper) {
             Button(onClick = {
-                user.joinLottery(campsite)
-                message = "Joined Lottery"
-            }) { Text("Join Lottery") }
+                user.joinLottery(campsite) { result ->
+                    message = result
+                }
+            }) {
+                Text("Join Lottery")
+            }
+
+            Button(onClick = {
+                user.joinWaitlist(campsite) { result ->
+                    message = result
+                }
+            }) {
+                Text("Join waiting list")
+            }
+
+            Button(onClick = {
+                user.leaveWaitlist(campsite) { result ->
+                    message = result
+                }
+            }) {
+                Text("Leave waiting list")
+            }
         }
 
         Text(message)
+
+        
 
         Spacer(modifier = Modifier.height(16.dp))
 

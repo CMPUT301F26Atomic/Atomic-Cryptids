@@ -8,6 +8,11 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
 
+/*
+Campsite Owner overrides interface methods, allowing for saving and deleting profile.
+todo optNotification method is not connected to firebase yet
+
+ */
 class CampsiteOwner : User {
     override val role= "campsite owner"
     override fun optNotification (boolean: Boolean): String {
@@ -66,6 +71,104 @@ class CampsiteOwner : User {
                 onResult("Saved")
             }
             .addOnFailureListener { onResult("Error: ${it.message}") }
+    }
+    /**
+     * The following function was provided by OpenAI, ChatGPT when prompted with
+     * "How do I retrieve a list of the sites belonging to a specific site owner?"
+     *
+     * Retrieves all campsites belonging to the authenticated campsite owner.
+     *
+     * @param onResult Callback receiving the owner's campsites.
+     * @param onError Callback receiving an error message if retrieval fails.
+     */
+    fun getOwnedCampsites(
+        onResult: (List<Campsite>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (uid == null) {
+            onError("No authenticated user found.")
+            return
+        }
+
+        FirebaseFirestore.getInstance()
+            .collection("campsites")
+            .whereEqualTo("owner", uid)
+            .get()
+            .addOnSuccessListener { snapshot ->
+                val campsites = snapshot.documents.map { doc ->
+                    Campsite(
+                        id = doc.id,
+                        name = doc.getString("name") ?: "",
+                        capacity = (doc.getLong("capacity") ?: 0).toInt(),
+                        owner = doc.getString("owner") ?: "",
+                        description = doc.getString("description") ?: "",
+                        location = doc.getString("location") ?: "",
+                        rules = doc.getString("rules") ?: "",
+                        availableStartDate = doc.getLong("availableStartDate"),
+                        availableEndDate = doc.getLong("availableEndDate")
+                    )
+                }
+
+                onResult(campsites)
+            }
+            .addOnFailureListener { exception ->
+                onError("Failed to load campsites: ${exception.message}")
+            }
+    }
+
+    /**
+     * The following function was provided by OpenAI, ChatGPT when prompted with
+     * "How do we make it so that a campsite can be updated by its owner"
+     *
+     * Updates an existing campsite in Firestore.
+     *
+     * Only allows the authenticated owner of the campsite to update it.
+     *
+     * @param campsiteId Firestore document ID of the campsite.
+     * @param updatedFields Map containing the campsite fields to update.
+     * @param onResult Callback receiving the result of the operation.
+     */
+    fun updateCampsite(
+        campsiteId: String,
+        updatedFields: Map<String, Any>,
+        onResult: (String) -> Unit
+    ) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (uid == null) {
+            onResult("Error: User is not authenticated.")
+            return
+        }
+
+        val document = FirebaseFirestore.getInstance()
+            .collection("campsites")
+            .document(campsiteId)
+
+        document.get()
+            .addOnSuccessListener { snapshot ->
+                if (!snapshot.exists()) {
+                    onResult("Error: Campsite not found.")
+                    return@addOnSuccessListener
+                }
+
+                if (snapshot.getString("owner") != uid) {
+                    onResult("Error: You do not own this campsite.")
+                    return@addOnSuccessListener
+                }
+
+                document.update(updatedFields)
+                    .addOnSuccessListener {
+                        onResult("Updated")
+                    }
+                    .addOnFailureListener {
+                        onResult("Error: ${it.message}")
+                    }
+            }
+            .addOnFailureListener {
+                onResult("Error: ${it.message}")
+            }
     }
 
     /**

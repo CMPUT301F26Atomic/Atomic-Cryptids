@@ -49,6 +49,7 @@ fun LoginScreen(navController: NavController, onSelectCamper: () -> Unit, onSele
         ) {
             Text("Admin")
         }
+
     }
 
 }

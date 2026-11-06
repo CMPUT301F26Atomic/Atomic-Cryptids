@@ -1,6 +1,7 @@
 package com.atomiccryptids.campsiteapp
 
 import androidx.compose.runtime.mutableStateListOf
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 
 /*
@@ -15,6 +16,11 @@ Maintain rating
 be booked by camper
 associations with lottery
 associate with owner
+ */
+
+/**
+ * Represents a campsite with all its attributes
+ * list of participants keep track of how many people are booked
  */
 
 class Campsite(
@@ -99,6 +105,14 @@ class Campsite(
                 return rules
             }
 
+            fun getAvailableStartDate(): Long? {
+                return availableStartDate
+            }
+
+            fun getAvailableEndDate(): Long? {
+                return availableEndDate
+            }
+
             fun getOccupancy(): Int {
                 return participants.size
             }
@@ -107,5 +121,24 @@ class Campsite(
                 FirebaseFirestore.getInstance().collection("campsites").add(campsiteToMap)
                     .addOnSuccessListener { onResult("Saved") }
                     .addOnFailureListener { onResult("Error: ${it.message}") }
+            }
+
+            companion object {
+                fun fromDoc(doc: DocumentSnapshot): Campsite? {
+                    val name = doc.getString("name")?.trim() ?: return null
+                    if (name.isBlank()) return null
+                    return Campsite(
+                        id = doc.id,
+                        name = name,
+                        capacity = doc.getLong("capacity")?.toInt() ?: 0,
+                        owner = doc.getString("owner") ?: "",
+                        occupancy = doc.getLong("occupancy")?.toInt() ?: 0,
+                        description = doc.getString("description") ?: "",
+                        location = doc.getString("location") ?: "",
+                        rules = doc.getString("rules") ?: "",
+                        availableStartDate = doc.getLong("availableStartDate"),
+                        availableEndDate = doc.getLong("availableEndDate"),
+                    )
+                }
             }
         }

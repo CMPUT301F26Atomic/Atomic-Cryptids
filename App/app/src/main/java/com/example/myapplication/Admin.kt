@@ -4,6 +4,9 @@ import com.atomiccryptids.campsiteapp.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
+/*
+Admin is an instance of interface User. Will be completed in the second sprint
+ */
 class Admin: User {
     override val role = "admin"
 
