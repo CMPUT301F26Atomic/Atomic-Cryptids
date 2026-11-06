@@ -20,6 +20,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var selectedCampsites by remember { mutableStateOf<List<Campsite>>(emptyList()) } //specific campsite used in current lottery
     var existingLotteryId by remember { mutableStateOf<String?>(null) } //if null make new lottery, if not edit existing
     var winnersInput by remember { mutableStateOf("") } //num of winners
+    var capacityInput by remember { mutableStateOf("") } //max people in the lottery
     var status by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
 
@@ -70,6 +71,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             val lot = snap.documents[0]
                                             existingLotteryId = lot.id
                                             winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
+                                            capacityInput = lot.getLong("capacity")?.toString() ?: ""
                                             status = "Editing existing lottery"
                                         }
                                     }
@@ -94,6 +96,12 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
             },
             label = { Text("Number of winners") }, modifier = Modifier.fillMaxWidth())
 
+        TextField(value = capacityInput, onValueChange = {
+            capacityInput = it
+            status = ""
+        },
+            label = { Text("Lottery capacity") }, modifier = Modifier.fillMaxWidth())
+
         Text(text = status, color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(24.dp))
 
@@ -103,18 +111,25 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                     status = "Error: Winner count must be a positive whole number."
                     return@Button
                 }
+                if (!LotteryValidator.isValidWinnerCount(capacityInput)) { //check input
+                    status = "Error: Capacity count must be a positive whole number."
+                    return@Button
+                }
 
                 val winnersInt = winnersInput.toInt()
+                val capacityInt = capacityInput.toInt()
                 val campsiteIds = selectedCampsites.map { it.id } //pull id from the Campsite
                 if (campsiteIds.isEmpty()) {
                     status = "Error: Select at least one campsite."
                     return@Button
                 }
 
-                val lotteryData = mapOf("campsiteIds" to campsiteIds, "numberOfWinners" to winnersInt, "ownerId" to ownerUid, "waitlist" to emptyList<String>()) //package data for firebase
+                val lotteryData = mapOf("campsiteIds" to campsiteIds, "numberOfWinners" to winnersInt, "capacity" to capacityInt, "ownerId" to ownerUid, "entrants" to emptyList<String>(), "waitlist" to emptyList<String>())
+                val updateData = mapOf("campsiteIds" to campsiteIds, "numberOfWinners" to winnersInt, "capacity" to capacityInt, "ownerId" to ownerUid)
+
 
                 if (existingLotteryId != null) { //if editing existing lottery update to overwrite its data
-                    db.collection("lotteries").document(existingLotteryId!!).update(lotteryData).addOnSuccessListener { status = "Lottery updated!" }
+                    db.collection("lotteries").document(existingLotteryId!!).update(updateData).addOnSuccessListener { status = "Lottery updated!" }
                 } else { //if not editing then create new lottery
                     db.collection("lotteries").add(lotteryData).addOnSuccessListener { docRef ->
                             existingLotteryId = docRef.id

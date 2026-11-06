@@ -10,7 +10,6 @@ import com.google.firebase.firestore.SetOptions
 
 class Camper: User {
 
-    private val userLotteries: MutableList<Campsite> = mutableListOf()
     override val role = "camper"
 
     override fun optNotification (boolean: Boolean) : String {
@@ -68,17 +67,51 @@ class Camper: User {
             }
     }
 
-    fun joinLottery(campsite: Campsite) {
-        if (userLotteries.none { it.getName() == campsite.getName() && it.getLocation() == campsite.getLocation() }) {
-            userLotteries.add(campsite)
-            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-            FirebaseFirestore.getInstance().collection("users").document(uid)
-                .set(mapOf("lotteries" to FieldValue.arrayUnion(campsite.campsiteToMap)), SetOptions.merge())
-                .addOnFailureListener { Log.e("User", "joinLottery failed", it) }
+    fun joinLottery(campsite: Campsite, onResult: (String) -> Unit) {
+        val user = FirebaseAuth.getInstance().currentUser
+        if (user == null) {
+            onResult("You are not signed in")
+            return
         }
+        val uid = user.uid
+
+        val db = FirebaseFirestore.getInstance()
+        db.collection("lotteries")
+            .whereArrayContains("campsiteIds", campsite.id)
+            .get()
+            .addOnSuccessListener { result ->
+                if (result.isEmpty) {
+                    onResult("This campsite has no lottery")
+                    return@addOnSuccessListener
+                }
+
+                val lottery = result.documents[0]
+                val capacity = lottery.getLong("capacity") ?: 0
+                val entrants = lottery.get("entrants") as? List<*> ?: emptyList<String>()
+
+                if (uid in entrants) {
+                    onResult("You are already in the lottery")
+                    return@addOnSuccessListener
+                }
+
+                if (entrants.size >= capacity) {
+                    onResult("Lottery is full, join the waiting list")
+                    return@addOnSuccessListener
+                }
+
+                lottery.reference.update("entrants", FieldValue.arrayUnion(uid))
+                    .addOnSuccessListener {
+                        onResult("Joined lottery")
+                    }
+                    .addOnFailureListener { error ->
+                        onResult("Could not join: " + error.message)
+                    }
+            }
+            .addOnFailureListener { error ->
+                onResult("Could not find lottery: " + error.message)
+            }
     }
 
-    // US 01.02.01 Join waiting list
     fun joinWaitlist(campsite: Campsite, onResult: (String) -> Unit) {
         val user = FirebaseAuth.getInstance().currentUser
         if (user == null) {
@@ -98,6 +131,19 @@ class Camper: User {
                 }
 
                 val lottery = result.documents[0]
+                val capacity = lottery.getLong("capacity") ?: 0
+                val entrants = lottery.get("entrants") as? List<*> ?: emptyList<String>()
+
+                if (uid in entrants) {
+                    onResult("Could not join waiting list, You are already in the lottery")
+                    return@addOnSuccessListener
+                }
+
+                if (entrants.size < capacity) {
+                    onResult("Lottery is not full, join the lottery instead")
+                    return@addOnSuccessListener
+                }
+
                 lottery.reference.update("waitlist", FieldValue.arrayUnion(uid))
                     .addOnSuccessListener {
                         onResult("Joined waiting list")
@@ -111,7 +157,6 @@ class Camper: User {
             }
     }
 
-    // US 01.02.02 Leave waiting list
     fun leaveWaitlist(campsite: Campsite, onResult: (String) -> Unit) {
         val user = FirebaseAuth.getInstance().currentUser
         if (user == null) {
@@ -131,6 +176,13 @@ class Camper: User {
                 }
 
                 val lottery = result.documents[0]
+
+                val waitlist = lottery.get("waitlist") as? List<*> ?: emptyList<String>()
+                if (uid !in waitlist) {
+                    onResult("You are not in the waiting list")
+                    return@addOnSuccessListener
+                }
+
                 lottery.reference.update("waitlist", FieldValue.arrayRemove(uid))
                     .addOnSuccessListener {
                         onResult("Left waiting list")

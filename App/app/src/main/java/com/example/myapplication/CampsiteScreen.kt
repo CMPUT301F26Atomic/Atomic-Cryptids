@@ -40,8 +40,9 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, camper: Cam
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            camper.joinLottery(campsite)
-            message = "Joined Lottery"
+            camper.joinLottery(campsite) { result ->
+                message = result
+            }
         }) { Text("Join Lottery") }
 
         Text(message)
