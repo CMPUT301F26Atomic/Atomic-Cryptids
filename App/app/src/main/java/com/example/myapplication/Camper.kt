@@ -106,6 +106,16 @@ class Camper: User {
                 }
 
                 val lottery = result.documents[0]
+
+                if (!LotteryValidator.isRegistrationOpen(
+                        System.currentTimeMillis(),
+                        lottery.getLong("registrationStartDate"),
+                        lottery.getLong("registrationEndDate"))
+                ) {
+                    onResult("Registration is closed for this lottery")
+                    return@addOnSuccessListener
+                }
+
                 val capacity = lottery.getLong("capacity") ?: 0
                 val entrants = lottery.get("entrants") as? List<*> ?: emptyList<String>()
 
@@ -151,6 +161,16 @@ class Camper: User {
                 }
 
                 val lottery = result.documents[0]
+
+                if (!LotteryValidator.isRegistrationOpen(
+                        System.currentTimeMillis(),
+                        lottery.getLong("registrationStartDate"),
+                        lottery.getLong("registrationEndDate"))
+                ) {
+                    onResult("Registration is closed for this lottery")
+                    return@addOnSuccessListener
+                }
+
                 val capacity = lottery.getLong("capacity") ?: 0
                 val entrants = lottery.get("entrants") as? List<*> ?: emptyList<String>()
 
