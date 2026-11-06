@@ -27,14 +27,18 @@ fun CampsiteApp() {
 
             LoginScreen(
                 navController,
-                onSelectOwner = {
-                    user = CampsiteOwner()
-                    (user as CampsiteOwner).saveUser()
-                },
                 onSelectCamper = {
                     user = Camper()
                     (user as Camper).saveUser()
                 },
+                onSelectOwner = {
+                    user = CampsiteOwner()
+                    (user as CampsiteOwner).saveUser()
+                },
+                onSelectAdmin = {
+                    user = Admin()
+                    (user as Admin).saveUser()
+                }
             )
         }
         composable("camper") {
@@ -44,10 +48,61 @@ fun CampsiteApp() {
                 onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
             )
         }
+        composable("owner-campsite-details") {
+            OwnerCampsiteDetailsScreen(
+                campsite = campsite as Campsite,
+                onBack = {
+                    navController.popBackStack()
+                },
+                onEdit = {
+                    navController.navigate("edit-owner-campsite")
+                }
+            )
+        }
+
+        composable("edit-owner-campsite") {
+            EditOwnerCampsiteScreen(
+                campsite = campsite as Campsite,
+                owner = user as CampsiteOwner,
+                onBack = {
+                    navController.popBackStack()
+                },
+                onSaved = {
+                    val selectedId = (campsite as Campsite).id
+
+                    (user as CampsiteOwner).getOwnedCampsites(
+                        onResult = { updatedCampsites ->
+                            val updatedCampsite = updatedCampsites.firstOrNull {
+                                it.id == selectedId
+                            }
+
+                            if (updatedCampsite != null) {
+                                campsite = updatedCampsite
+                            }
+
+                            navController.popBackStack()
+                        },
+                        onError = {
+                            navController.popBackStack()
+                        }
+                    )
+                }
+            )
+        }
+
         composable("owner") {
             OwnerScreen(
+                navController = navController,
+                owner = user as CampsiteOwner,
+                onSelectCampsite = { selectedCampsite ->
+                    campsite = selectedCampsite
+                }
+            )
+        }
+        composable("admin") {
+            AdminScreen(
                 navController,
-                user as CampsiteOwner
+                user as Admin
             )
         }
         composable("campsite") {
@@ -63,6 +118,24 @@ fun CampsiteApp() {
                 ownerUid = uid,
                 onBack = { navController.popBackStack() }
             )
+        }
+        composable("wins") {
+            LotteryWinsScreen(
+                navController,
+                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
+            )
+        }
+        composable("reserve") {
+            ReserveScreen(
+                navController,
+                campsite as Campsite
+            )
+        }
+        composable("myreservations") {
+            MyReservationsScreen(navController)
+        }
+        composable("ownerreservations") {
+            OwnerReservationsScreen(navController)
         }
     }
 }

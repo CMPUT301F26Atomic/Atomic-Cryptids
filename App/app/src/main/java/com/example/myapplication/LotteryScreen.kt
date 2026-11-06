@@ -13,6 +13,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.atomiccryptids.campsiteapp.Campsite
 import com.google.firebase.firestore.FirebaseFirestore
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+import java.util.TimeZone
 
 @Composable
 fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
@@ -23,6 +27,11 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var capacityInput by remember { mutableStateOf("") } //max people in the lottery
     var status by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
+    var bookingStartDate by remember { mutableStateOf<Long?>(null) }
+    var bookingEndDate by remember { mutableStateOf<Long?>(null) }
+
+    var showBookingStartPicker by remember { mutableStateOf(false) }
+    var showBookingEndPicker by remember { mutableStateOf(false) }
 
     val db = FirebaseFirestore.getInstance()
 
@@ -72,6 +81,8 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             existingLotteryId = lot.id
                                             winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
                                             capacityInput = lot.getLong("capacity")?.toString() ?: ""
+                                            bookingStartDate = lot.getLong("bookingStartDate")
+                                            bookingEndDate = lot.getLong("bookingEndDate")
                                             status = "Editing existing lottery"
                                         }
                                     }
@@ -102,11 +113,117 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
         },
             label = { Text("Lottery capacity") }, modifier = Modifier.fillMaxWidth())
 
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text("Booking Period")
+
+        Button(
+            onClick = { showBookingStartPicker = true }
+        ) {
+            Text(
+                bookingStartDate?.let { date ->
+                    SimpleDateFormat(
+                        "MMM dd, yyyy",
+                        Locale.getDefault()
+                    ).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }.format(Date(date))
+                } ?: "Select Booking Start Date"
+            )
+        }
+
+        if (showBookingStartPicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = bookingStartDate
+            )
+
+            DatePickerDialog(
+                onDismissRequest = { showBookingStartPicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            bookingStartDate = datePickerState.selectedDateMillis
+                            showBookingStartPicker = false
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showBookingStartPicker = false }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Button(
+            onClick = { showBookingEndPicker = true }
+        ) {
+            Text(
+                bookingEndDate?.let { date ->
+                    SimpleDateFormat(
+                        "MMM dd, yyyy",
+                        Locale.getDefault()
+                    ).apply {
+                        timeZone = TimeZone.getTimeZone("UTC")
+                    }.format(Date(date))
+                } ?: "Select Booking End Date"
+            )
+        }
+
+        if (showBookingEndPicker) {
+            val datePickerState = rememberDatePickerState(
+                initialSelectedDateMillis = bookingEndDate
+            )
+
+            DatePickerDialog(
+                onDismissRequest = { showBookingEndPicker = false },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            bookingEndDate = datePickerState.selectedDateMillis
+                            showBookingEndPicker = false
+                        }
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { showBookingEndPicker = false }
+                    ) {
+                        Text("Cancel")
+                    }
+                }
+            ) {
+                DatePicker(state = datePickerState)
+            }
+        }
+
         Text(text = status, color = MaterialTheme.colorScheme.primary)
         Spacer(modifier = Modifier.height(24.dp))
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { //buttons side by side
             Button(onClick = {
+
+                val start = bookingStartDate
+                val end = bookingEndDate
+
+                if (start == null || end == null) {
+                    status = "Error: Please select both booking dates."
+                    return@Button
+                }
+
+                if (end <= start) {
+                    status = "Error: Booking end date must be after the start date."
+                    return@Button
+                }
                 if (!LotteryValidator.isValidWinnerCount(winnersInput)) { //check input
                     status = "Error: Winner count must be a positive whole number."
                     return@Button
@@ -124,17 +241,34 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                     return@Button
                 }
 
-                val lotteryData = mapOf("campsiteIds" to campsiteIds, "numberOfWinners" to winnersInt, "capacity" to capacityInt, "ownerId" to ownerUid, "entrants" to emptyList<String>(), "waitlist" to emptyList<String>())
-                val updateData = mapOf("campsiteIds" to campsiteIds, "numberOfWinners" to winnersInt, "capacity" to capacityInt, "ownerId" to ownerUid)
-
+                val lotteryData = mapOf(//package data for firebase
+                    "campsiteIds" to campsiteIds,
+                    "numberOfWinners" to winnersInt,
+                    "capacity" to capacityInt,
+                    "ownerId" to ownerUid,
+                    "entrants" to emptyList<String>(),
+                    "waitlist" to emptyList<String>(),
+                    "bookingStartDate" to start,
+                    "bookingEndDate" to end
+                )
 
                 if (existingLotteryId != null) { //if editing existing lottery update to overwrite its data
-                    db.collection("lotteries").document(existingLotteryId!!).update(updateData).addOnSuccessListener { status = "Lottery updated!" }
+                    val updatedFields = lotteryData - "waitlist" - "entrants" //preserve existing lists when updating
+
+                    db.collection("lotteries")
+                        .document(existingLotteryId!!)
+                        .update(updatedFields)
+                        .addOnSuccessListener {
+                            status = "Lottery updated!"
+                        }
+                        .addOnFailureListener {
+                            status = "Error: ${it.message}"
+                        }
                 } else { //if not editing then create new lottery
                     db.collection("lotteries").add(lotteryData).addOnSuccessListener { docRef ->
-                            existingLotteryId = docRef.id
-                            status = "New lottery created!"
-                        }
+                        existingLotteryId = docRef.id
+                        status = "New lottery created!"
+                    }
                 }
             }) {
                 Text("Save")
