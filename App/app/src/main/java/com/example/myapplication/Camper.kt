@@ -184,12 +184,27 @@ class Camper: User {
                     return@addOnSuccessListener
                 }
 
-                lottery.reference.update("waitlist", FieldValue.arrayUnion(uid))
+                val lotteryRef = lottery.reference
+                db.runTransaction { transaction ->
+                    val snap = transaction.get(lotteryRef)
+                    val waitlist = snap.get("waitlist") as? List<*> ?: emptyList<String>()
+                    val waitlistCapacity = snap.getLong("waitlistCapacity")
+
+                    if (uid in waitlist) {
+                        throw IllegalStateException("You are already on the waiting list")
+                    }
+                    if (waitlistCapacity != null && waitlist.size >= waitlistCapacity) {
+                        throw IllegalStateException("Waiting list is full")
+                    }
+
+                    transaction.update(lotteryRef, "waitlist", FieldValue.arrayUnion(uid))
+                    null
+                }
                     .addOnSuccessListener {
                         onResult("Joined waiting list")
                     }
                     .addOnFailureListener { error ->
-                        onResult("Could not join: " + error.message)
+                        onResult(error.message ?: "Could not join waiting list")
                     }
             }
             .addOnFailureListener { error ->

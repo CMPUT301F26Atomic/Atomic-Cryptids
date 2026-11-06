@@ -6,6 +6,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.atomiccryptids.campsiteapp.Campsite
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.ui.Alignment
@@ -25,6 +26,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var existingLotteryId by remember { mutableStateOf<String?>(null) } //if null make new lottery, if not edit existing
     var winnersInput by remember { mutableStateOf("") } //num of winners
     var capacityInput by remember { mutableStateOf("") } //max people in the lottery
+    var waitlistCapacityInput by remember { mutableStateOf("") }
     var status by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
     var regStartDateMillis by remember { mutableStateOf<Long?>(null) } //registration window open
@@ -89,6 +91,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             regStartDateMillis = lot.getLong("registrationStartDate")
                                             regEndDateMillis = lot.getLong("registrationEndDate")
                                             capacityInput = lot.getLong("capacity")?.toString() ?: ""
+                                            waitlistCapacityInput = lot.getLong("waitlistCapacity")?.toString() ?: ""
                             
                                             status = "Editing existing lottery"
                                             val lotteryCampsiteIds = lot.get("campsiteIds") as? List<String> ?: emptyList()
@@ -126,9 +129,11 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                 .addOnSuccessListener {
                                     existingLotteryId = null
                                     winnersInput = ""
+                                    waitlistCapacityInput = ""
                                     regStartDateMillis = null
                                     regEndDateMillis = null
                                     capacityInput = ""
+                                    waitlistCapacityInput = ""
                                     status = "Lottery deleted because no campsites remain."
                                 }
                                 .addOnFailureListener { e ->
@@ -152,6 +157,21 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
 
 
         Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextField(
+            value = waitlistCapacityInput,
+            onValueChange = {
+                if (it.isEmpty() || (it.toIntOrNull() ?: 0) > 0) {
+                    waitlistCapacityInput = it
+                    isConfirming = false
+                    status = ""
+                }
+            },
+            label = { Text("Waitlist capacity (optional, empty = unlimited)") },
+            modifier = Modifier.fillMaxWidth()
+        )
+
 
         Button(onClick = { showRegPicker = true }, modifier = Modifier.fillMaxWidth()) {
             Text(
@@ -258,19 +278,27 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                 isConfirming = true
                                 status = "Review the details above. Click 'Confirm Save' to finalize."
                             } else {
-                                val lotteryData = mapOf(
-                                    "campsiteIds" to campsiteIds,
-                                    "numberOfWinners" to winnersInt,
-                                    "capacity" to capacityInt,
-                                    "ownerId" to ownerUid,
-                                    "startDate" to regStartDateMillis!!,
-                                    "endDate" to regEndDateMillis!!,
-                                    "registrationStartDate" to regStartDateMillis!!,
-                                    "registrationEndDate" to regEndDateMillis!!
-                                )
+                                val waitlistCapacityLong = waitlistCapacityInput.toIntOrNull()?.toLong()
+                                val lotteryData = buildMap<String, Any> {
+                                    put("campsiteIds", campsiteIds)
+                                    put("numberOfWinners", winnersInt)
+                                    put("capacity", capacityInt)
+                                    put("ownerId", ownerUid)
+                                    put("startDate", regStartDateMillis!!)
+                                    put("endDate", regEndDateMillis!!)
+                                    put("registrationStartDate", regStartDateMillis!!)
+                                    put("registrationEndDate", regEndDateMillis!!)
+                                    if (waitlistCapacityLong != null) {
+                                        put("waitlistCapacity", waitlistCapacityLong)
+                                    }
+                                }
 
                                 if (existingLotteryId != null) {
                                     val lotteryRef = db.collection("lotteries").document(existingLotteryId!!)
+                                    val updateData = lotteryData.toMutableMap()
+                                    if (waitlistCapacityLong == null) {
+                                        updateData["waitlistCapacity"] = FieldValue.delete()
+                                    }
 
                                     db.runTransaction { transaction ->
                                         val snapshot = transaction.get(lotteryRef)
@@ -283,13 +311,14 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             throw IllegalStateException("You do not own this lottery.")
                                         }
 
-                                        transaction.update(lotteryRef, lotteryData)
+                                        transaction.update(lotteryRef, updateData)
                                         null
                                     }
                                         .addOnSuccessListener {
                                             existingLotteryId = null
                                             selectedCampsites = emptyList()
                                             winnersInput = ""
+                                            waitlistCapacityInput = ""
                                             regStartDateMillis = null
                                             regEndDateMillis = null
                                             isConfirming = false
@@ -311,6 +340,7 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                             existingLotteryId = null
                                             selectedCampsites = emptyList()
                                             winnersInput = ""
+                                            waitlistCapacityInput = ""
                                             regStartDateMillis = null
                                             regEndDateMillis = null
                                             isConfirming = false
