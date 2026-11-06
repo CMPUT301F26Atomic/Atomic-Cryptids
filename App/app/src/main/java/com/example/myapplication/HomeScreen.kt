@@ -21,6 +21,7 @@ fun HomeScreen(user: User?, navController: NavController) {
         null -> navController.navigate("login") { launchSingleTop = true }
         is Camper -> navController.navigate("camper") { launchSingleTop = true }
         is CampsiteOwner -> navController.navigate("owner") { launchSingleTop = true }
+        is Admin -> navController.navigate("admin") { launchSingleTop = true }
         else -> {}
     }
 }

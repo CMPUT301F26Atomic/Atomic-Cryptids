@@ -16,9 +16,19 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 
 @Composable
-fun LoginScreen(navController: NavController, onSelectOwner: () -> Unit, onSelectCamper: () -> Unit) {
+fun LoginScreen(navController: NavController, onSelectCamper: () -> Unit, onSelectOwner: () -> Unit, onSelectAdmin: () -> Unit) {
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp),verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+
+        Button(onClick = {
+            onSelectCamper()
+            navController.navigate("home")
+        },
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text("Camper")
+        }
+
         Button(onClick = {
             onSelectOwner()
             navController.navigate("home")
@@ -31,12 +41,12 @@ fun LoginScreen(navController: NavController, onSelectOwner: () -> Unit, onSelec
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(onClick = {
-            onSelectCamper()
+            onSelectAdmin()
             navController.navigate("home")
         },
             modifier = Modifier.fillMaxWidth()
         ) {
-            Text("Camper")
+            Text("Admin")
         }
 
     }

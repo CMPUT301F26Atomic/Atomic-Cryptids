@@ -1,3 +1,9 @@
+/**
+ * UI screen for lotteries
+ *
+ * @param ownerUid the id of the user that is currently logged in
+ * @param onBack function triggered to navigate back to previous screen
+ */
 package com.example.myapplication
 
 import androidx.compose.foundation.layout.*
@@ -7,16 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.atomiccryptids.campsiteapp.Campsite
 import com.google.firebase.firestore.FirebaseFirestore
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.ui.Alignment
 
-
-/**
- * UI screen for lotteries
- *
- * @param ownerUid the id of the user that is currently logged in
- * @param onBack function triggered to navigate back to previous screen
- */
 @Composable
 fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var allCampsites by remember { mutableStateOf<List<Campsite>>(emptyList()) } //list of campsites for dropdown
@@ -25,20 +22,13 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     var winnersInput by remember { mutableStateOf("") } //num of winners
     var status by remember { mutableStateOf("") }
     var expanded by remember { mutableStateOf(false) }
-    var startDateMillis by remember { mutableStateOf<Long?>(null) }
-    var endDateMillis by remember { mutableStateOf<Long?>(null) }
-    var showStartDatePicker by remember { mutableStateOf(false) }
-    var showEndDatePicker by remember { mutableStateOf(false) }
-    var isConfirming by remember { mutableStateOf(false) }
-
-
 
     val db = FirebaseFirestore.getInstance()
 
     // fetch campsite
     LaunchedEffect(ownerUid) {
         db.collection("campsites")
-            .whereEqualTo("owner", ownerUid).get()
+            .whereEqualTo("owner", "owner").get() //only use campsites belonging to user
             .addOnSuccessListener { snapshot ->
                 allCampsites = snapshot.documents.mapNotNull { doc -> //loop through all elements returned by firebase, skip all null values
                     val rawName = doc.getString("name") ?: ""
@@ -56,43 +46,31 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     //UI
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding()) {
         Text("Create / Edit Lottery", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier =
-            Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // dropdown menu
         Box {
             Button(onClick = { expanded = true }) {
                 Text("Add Campsite to Lottery")
             }
-
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.heightIn(max = 280.dp)) {
-                allCampsites.forEach { campsite ->
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) { //close dropdown if user clicks outside of menu
+                allCampsites.forEach { campsite -> //clickable row for each item
                     DropdownMenuItem(
                         text = { Text(campsite.getName()) },
                         onClick = {
-                            expanded = false
-                            isConfirming = false
-                            status = ""
-                            if (!selectedCampsites.any { it.id == campsite.id }) {
+                            expanded = false //close menu when item is selected
+                            if (!selectedCampsites.any { it.id == campsite.id }) { //check if clicked campsite has already been selected
                                 selectedCampsites = selectedCampsites + campsite
 
                                 // check if editing
                                 db.collection("lotteries")
-                                    .whereArrayContains("campsiteIds", campsite.id).get()
+                                    .whereArrayContains("campsiteIds", campsite.id).get() //check lotteries collection to see if chosen campsite is already in a lottery
                                     .addOnSuccessListener { snap ->
-                                        if (!snap.isEmpty) {
+                                        if (!snap.isEmpty) { //if campsite is already in lottery
                                             val lot = snap.documents[0]
                                             existingLotteryId = lot.id
                                             winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
-                                            startDateMillis = lot.getLong("startDate")
-                                            endDateMillis = lot.getLong("endDate")
                                             status = "Editing existing lottery"
-                                            val lotteryCampsiteIds = lot.get("campsiteIds") as? List<String> ?: emptyList()
-                                            val associatedCampsites = allCampsites.filter { it.id in lotteryCampsiteIds }
-                                            selectedCampsites = (selectedCampsites + associatedCampsites).distinctBy { it.id }
                                         }
                                     }
                             }
@@ -102,100 +80,16 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
             }
         }
 
-
         Spacer(modifier = Modifier.height(16.dp))
+
         Text("Selected Campsites:", style = MaterialTheme.typography.titleMedium)
-        selectedCampsites.forEach { campsite ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("- ${campsite.getName()}")
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = {
-                        isConfirming = false
-                        selectedCampsites = selectedCampsites.filter { it.id != campsite.id }
-                        if (selectedCampsites.isEmpty() && existingLotteryId != null) {
-                            db.collection("lotteries").document(existingLotteryId!!)
-                                .delete()
-                                .addOnSuccessListener {
-                                    existingLotteryId = null
-                                    winnersInput = ""
-                                    startDateMillis = null
-                                    endDateMillis = null
-                                    status = "Lottery deleted because no campsites remain."
-                                }
-                                .addOnFailureListener { e ->
-                                    status = "Error deleting lottery: ${e.message}"
-                                }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("-")
-                }
-            }
-        }
+        selectedCampsites.forEach { Text("- ${it.getName()}") } //display chosen campsite name
 
         Spacer(modifier = Modifier.height(16.dp))
-
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Button(onClick = { showStartDatePicker = true }, modifier = Modifier.weight(1f)) {
-                Text(
-                    startDateMillis?.let { formatUtcDate(it) } ?: "Start Date"
-                )
-            }
-            Button(onClick = { showEndDatePicker = true }, modifier = Modifier.weight(1f)) {
-                Text(
-                    endDateMillis?.let { formatUtcDate(it) } ?: "End Date"
-                )
-            }
-        }
-
-        if (showStartDatePicker) {
-            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = startDateMillis)
-            DatePickerDialog(
-                onDismissRequest = { showStartDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        startDateMillis = datePickerState.selectedDateMillis
-                        showStartDatePicker = false
-                        isConfirming = false
-                        status = ""
-                    }) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showStartDatePicker = false }) { Text("Cancel") }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
-
-        if (showEndDatePicker) {
-            val datePickerState = rememberDatePickerState(initialSelectedDateMillis = endDateMillis)
-            DatePickerDialog(
-                onDismissRequest = { showEndDatePicker = false },
-                confirmButton = {
-                    TextButton(onClick = {
-                        endDateMillis = datePickerState.selectedDateMillis
-                        showEndDatePicker = false
-                        isConfirming = false
-                        status = ""
-                    }) { Text("OK") }
-                },
-                dismissButton = {
-                    TextButton(onClick = { showEndDatePicker = false }) { Text("Cancel") }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
 
         //number of winners text box
         TextField(value = winnersInput, onValueChange = {
                 winnersInput = it
-                isConfirming = false
                 status = ""
             },
             label = { Text("Number of winners") }, modifier = Modifier.fillMaxWidth())
@@ -205,94 +99,30 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
 
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) { //buttons side by side
             Button(onClick = {
-                if (!LotteryValidator.isValidWinnerCount(winnersInput)) {
+                if (!LotteryValidator.isValidWinnerCount(winnersInput)) { //check input
                     status = "Error: Winner count must be a positive whole number."
-                    isConfirming = false
                     return@Button
                 }
-                val winnersInt = winnersInput.toInt()
-                val campsiteIds = selectedCampsites.map { it.id }
 
+                val winnersInt = winnersInput.toInt()
+                val campsiteIds = selectedCampsites.map { it.id } //pull id from the Campsite
                 if (campsiteIds.isEmpty()) {
                     status = "Error: Select at least one campsite."
-                    isConfirming = false
                     return@Button
                 }
 
-                if (startDateMillis == null || endDateMillis == null) {
-                    status = "Error: Please specify both start and end dates for the lottery period."
-                    isConfirming = false
-                    return@Button
-                }
+                val lotteryData = mapOf("campsiteIds" to campsiteIds, "numberOfWinners" to winnersInt, "ownerId" to ownerUid, "waitlist" to emptyList<String>()) //package data for firebase
 
-                if (endDateMillis!! <= startDateMillis!!) {
-                    status = "Error: End date must be after start date."
-                    isConfirming = false
-                    return@Button
-                }
-
-                db.collection("lotteries")
-                    .whereArrayContainsAny("campsiteIds", campsiteIds)
-                    .get()
-                    .addOnSuccessListener { snap ->
-                        val hasOverlap = snap.documents.any { doc ->
-                            if (existingLotteryId != null && doc.id == existingLotteryId) return@any false
-                            val existingStart = doc.getLong("startDate") ?: 0L
-                            val existingEnd = doc.getLong("endDate") ?: 0L
-                            startDateMillis!! <= existingEnd && endDateMillis!! >= existingStart
+                if (existingLotteryId != null) { //if editing existing lottery update to overwrite its data
+                    db.collection("lotteries").document(existingLotteryId!!).update(lotteryData).addOnSuccessListener { status = "Lottery updated!" }
+                } else { //if not editing then create new lottery
+                    db.collection("lotteries").add(lotteryData).addOnSuccessListener { docRef ->
+                            existingLotteryId = docRef.id
+                            status = "New lottery created!"
                         }
-
-                        if (hasOverlap) {
-                            status = "Error: A campsite in your selection already has an active lottery during this period."
-                            isConfirming = false
-                        } else {
-                            if (!isConfirming) {
-                                isConfirming = true
-                                status = "Review the details above. Click 'Confirm Save' to finalize."
-                            } else {
-                                // Second click: Save to database
-                                val lotteryData = mapOf(
-                                    "campsiteIds" to campsiteIds,
-                                    "numberOfWinners" to winnersInt,
-                                    "ownerId" to ownerUid,
-                                    "startDate" to startDateMillis!!,
-                                    "endDate" to endDateMillis!!,
-                                    "waitlist" to emptyList<String>()
-                                )
-
-                                if (existingLotteryId != null) {
-                                    db.collection("lotteries").document(existingLotteryId!!)
-                                        .update(lotteryData)
-                                        .addOnSuccessListener {
-                                            existingLotteryId = null
-                                            selectedCampsites = emptyList()
-                                            winnersInput = ""
-                                            startDateMillis = null
-                                            endDateMillis = null
-                                            isConfirming = false
-                                            status = "Lottery updated successfully!"
-                                        }
-                                } else {
-                                    db.collection("lotteries").add(lotteryData)
-                                        .addOnSuccessListener {
-                                            existingLotteryId = null
-                                            selectedCampsites = emptyList()
-                                            winnersInput = ""
-                                            startDateMillis = null
-                                            endDateMillis = null
-                                            isConfirming = false
-                                            status = "New lottery listing created!"
-                                        }
-                                }
-                            }
-                        }
-                    }
-                    .addOnFailureListener { e ->
-                        status = "Database error: ${e.message}"
-                        isConfirming = false
-                    }
+                }
             }) {
-                Text(if (isConfirming) "Confirm Save" else "Save Listing")
+                Text("Save")
             }
             Button(onClick = onBack) { Text("Back") }
         }
