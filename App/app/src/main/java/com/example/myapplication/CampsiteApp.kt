@@ -27,14 +27,18 @@ fun CampsiteApp() {
 
             LoginScreen(
                 navController,
-                onSelectOwner = {
-                    user = CampsiteOwner()
-                    (user as CampsiteOwner).saveUser()
-                },
                 onSelectCamper = {
                     user = Camper()
                     (user as Camper).saveUser()
                 },
+                onSelectOwner = {
+                    user = CampsiteOwner()
+                    (user as CampsiteOwner).saveUser()
+                },
+                onSelectAdmin = {
+                    user = Admin()
+                    (user as Admin).saveUser()
+                }
             )
         }
         composable("camper") {
@@ -48,6 +52,12 @@ fun CampsiteApp() {
             OwnerScreen(
                 navController,
                 user as CampsiteOwner
+            )
+        }
+        composable("admin") {
+            AdminScreen(
+                navController,
+                user as Admin
             )
         }
         composable("campsite") {
