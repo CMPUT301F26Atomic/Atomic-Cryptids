@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -31,5 +32,15 @@ class Admin: User {
                 onError("Error: ${it.message}")
             }
 
+    }
+
+    /**
+     * Allows admin to delete a campsite from the database
+     * Uses the id of the campsite to access it from the database
+     *
+     * @param campsite the campsite object which contains the information describing the campsite to be deleted
+     */
+    fun removeCampsite(campsite: Campsite) {
+        FirebaseFirestore.getInstance().collection("campsites").document(campsite.id).delete()
     }
 }
