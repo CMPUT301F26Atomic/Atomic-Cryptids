@@ -76,7 +76,7 @@ fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (C
                 }
 
                 Spacer(modifier = Modifier.width(16.dp))
-                
+
                 // BUG when the app is reloaded, the deleted users are back in the list
 
                 Button(
