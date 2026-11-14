@@ -19,6 +19,7 @@ fun CampsiteApp() {
 
 
     var user by rememberSaveable { mutableStateOf<User?>(null) }
+    var camper by rememberSaveable { mutableStateOf<Camper?>(null) }
     var campsite by rememberSaveable { mutableStateOf<Campsite?>(null) }
     
     NavHost(navController = navController, startDestination = "home") {
@@ -46,6 +47,12 @@ fun CampsiteApp() {
                 navController,
                 user as Camper,
                 onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
+            )
+        }
+        composable("camper-profile") {
+            CamperProfileScreen(
+                navController,
+                camper as Camper
             )
         }
         composable("owner-campsite-details") {
@@ -116,6 +123,7 @@ fun CampsiteApp() {
             AdminScreen(
                 navController,
                 user as Admin,
+                onSelectCamper = { selectedCamper -> camper = selectedCamper },
                 onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
             )
         }
