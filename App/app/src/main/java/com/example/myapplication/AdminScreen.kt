@@ -30,7 +30,12 @@ import androidx.compose.ui.unit.dp
  * @param admin object for user accessing
  */
 @Composable
-fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (Campsite) -> Unit) {
+fun AdminScreen(
+    navController: NavController,
+    admin: Admin,
+    onSelectCamper: (Camper) -> Unit,
+    onSelectCampsite: (Campsite) -> Unit
+) {
 
     var message by remember { mutableStateOf("") }
     var campers by remember { mutableStateOf<List<Camper>?>(null) }
@@ -61,14 +66,20 @@ fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (C
         }
         Text(message)
 
-        // Admin can't actually view the camper profile details yet since the attributes are not set up yet
-
         campers?.forEach { camper ->
             Button(
-                onClick = { /* TODO implement */ },
+                onClick = {
+                    onSelectCamper(camper)
+                    navController.navigate("camper-profile")
+                },
                 modifier = Modifier.testTag("camper")
             ) {
-                Text("Camper")
+                if (camper.getName() == "") {
+                    Text("Unnamed Camper")
+                }
+                else {
+                    Text(camper.getName())
+                }
             }
 
             Spacer(modifier = Modifier.height(16.dp))
