@@ -1,11 +1,14 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -24,13 +27,18 @@ import androidx.compose.ui.unit.dp
 /**
  * Screen for admin
  *
- * Option to view profiles of campers
+ * Option to view profiles of campers and campsites
  *
  * @param navController controller object for navigating between screens
  * @param admin object for user accessing
+ * @param onSelectCampsite callback function for result clicking on a campsite
  */
 @Composable
-fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (Campsite) -> Unit) {
+fun AdminScreen(
+    navController: NavController,
+    admin: Admin,
+    onSelectCampsite: (Campsite) -> Unit
+) {
 
     var message by remember { mutableStateOf("") }
     var campers by remember { mutableStateOf<List<Camper>?>(null) }
@@ -86,11 +94,25 @@ fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (C
         Text(message)
 
         campsites?.forEach { campsite ->
-            Button(onClick = {
-                onSelectCampsite(campsite)
-                navController.navigate("campsite")
-            }) {
-                Text("${campsite.getName()} - ${campsite.getLocation()}")
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = {
+                    onSelectCampsite(campsite)
+                    navController.navigate("campsite")
+                }) {
+                    Text("${campsite.getName()} - ${campsite.getLocation()}")
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                Button(onClick = {
+                    admin.removeCampsite(campsite)
+                    // asked Google Gemini how to update the UI after deleting an element
+                    // .filter returns a new list object which allows the composable to detect changes
+                    campsites = campsites?.filter { it != campsite }
+                }) {
+                    Text("Remove")
+                }
+
             }
 
             Spacer(modifier = Modifier.height(16.dp))
