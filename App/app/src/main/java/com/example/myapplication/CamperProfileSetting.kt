@@ -90,7 +90,7 @@ fun CamperProfileSetting(
                     setName(name)
                     setEmail(email)
                     setPhone(phone)
-                    saveUser()
+                    camper.saveUser()
                 }
                 onBack()
             }

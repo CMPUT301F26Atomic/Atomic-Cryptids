@@ -80,11 +80,9 @@ fun AdminScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                // BUG when the app is reloaded, the deleted users are back in the list
-
                 Button(
                     onClick = {
-                        camper.deleteProfile()
+                        admin.removeCamper(camper)
                         campers = campers?.filter { it != camper }
                     }
                 ) {

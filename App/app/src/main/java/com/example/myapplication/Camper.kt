@@ -9,6 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
 class Camper(
+    var id:String = "",
     private var name:String = "",
     private var email:String = "",
     private var phone:String = ""
@@ -64,6 +65,7 @@ class Camper(
      */
     override fun saveUser() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        id = uid
         FirebaseFirestore.getInstance().collection("users").document(uid)
             .set(mapOf("role" to role, "email" to email, "phone" to phone), SetOptions.merge())
             .addOnFailureListener { Log.e("User", "saveUser failed", it) }

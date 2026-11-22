@@ -1,5 +1,6 @@
 package com.example.myapplication
 
+import android.util.Log
 import com.atomiccryptids.campsiteapp.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -30,6 +31,16 @@ class Admin: User {
             .addOnFailureListener {
                 onError("Error: ${it.message}")
             }
+    }
 
+    /**
+     * Removes a camper from the database
+     *
+     * @param camper camper object containing the id attribute used to query the database
+     */
+    fun removeCamper(camper: Camper) {
+        FirebaseFirestore.getInstance().collection("users").document(camper.id)
+            .delete()
+            .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
     }
 }
