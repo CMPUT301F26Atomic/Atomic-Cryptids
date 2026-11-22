@@ -67,7 +67,7 @@ class Camper(
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         id = uid
         FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(mapOf("role" to role, "email" to email, "phone" to phone), SetOptions.merge())
+            .set(mapOf("role" to role, "name" to name, "email" to email, "phone" to phone), SetOptions.merge())
             .addOnFailureListener { Log.e("User", "saveUser failed", it) }
     }
     /**

@@ -24,7 +24,12 @@ class Admin: User {
         FirebaseFirestore.getInstance().collection("users").whereEqualTo("role", "camper").get()
             .addOnSuccessListener { result ->
                 val campers = result.documents.map { doc ->
-                    Camper()
+                    Camper(
+                        doc.id,
+                        doc.getString("name") ?: "",
+                        doc.getString("email") ?: "",
+                        doc.getString("phone") ?: "",
+                        )
                 }
                 onResult(campers)
             }
