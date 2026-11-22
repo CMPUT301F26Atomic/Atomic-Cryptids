@@ -8,9 +8,36 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
-class Camper: User {
-
+class Camper(
+    private var name:String = "",
+    private var email:String = "",
+    private var phone:String = ""
+): User {
     override val role = "camper"
+
+    fun setName(newName: String) {
+        name = newName
+    }
+
+    fun setEmail(newEmail: String) {
+        email = newEmail
+    }
+
+    fun setPhone(newPhone:String) {
+        phone = newPhone
+    }
+
+    fun getName(): String {
+        return name
+    }
+
+    fun getEmail(): String {
+        return email
+    }
+
+    fun getPhone(): String {
+        return phone
+    }
 
     /**
      * @param boolean is the state of the user's optnotification setting.
@@ -38,7 +65,7 @@ class Camper: User {
     override fun saveUser() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
         FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(mapOf("role" to role), SetOptions.merge())
+            .set(mapOf("role" to role, "email" to email, "phone" to phone), SetOptions.merge())
             .addOnFailureListener { Log.e("User", "saveUser failed", it) }
     }
     /**

@@ -33,7 +33,12 @@ import androidx.compose.ui.unit.dp
  * @param admin object for user accessing
  */
 @Composable
-fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (Campsite) -> Unit) {
+fun AdminScreen(
+    navController: NavController,
+    admin: Admin,
+    onSelectCamper: (Camper) -> Unit,
+    onSelectCampsite: (Campsite) -> Unit
+) {
 
     var message by remember { mutableStateOf("") }
     var campers by remember { mutableStateOf<List<Camper>?>(null) }
@@ -63,8 +68,6 @@ fun AdminScreen(navController: NavController, admin: Admin, onSelectCampsite: (C
             Text("View camper profiles")
         }
         Text(message)
-
-        // Admin can't actually view the camper profile details yet since the attributes are not set up yet
 
         campers?.forEach { camper ->
             Row(modifier = Modifier.fillMaxWidth()) {
