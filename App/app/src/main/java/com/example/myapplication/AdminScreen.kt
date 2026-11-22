@@ -43,6 +43,7 @@ fun AdminScreen(
     var message by remember { mutableStateOf("") }
     var campers by remember { mutableStateOf<List<Camper>?>(null) }
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
+    var showConfirmation by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
 
@@ -104,11 +105,21 @@ fun AdminScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
+                if (showConfirmation) {
+                    ConfirmationPrompt(
+                        "Confirm campsite removal",
+                        "Would you like to delete this campsite?",
+                        onConfirm = {
+                            admin.removeCampsite(campsite)
+                            showConfirmation = false
+                            campsites = campsites?.filter { it != campsite }
+                        },
+                        onDecline = { showConfirmation = false }
+                    )
+                }
+
                 Button(onClick = {
-                    admin.removeCampsite(campsite)
-                    // asked Google Gemini how to update the UI after deleting an element
-                    // .filter returns a new list object which allows the composable to detect changes
-                    campsites = campsites?.filter { it != campsite }
+                    showConfirmation = true
                 }) {
                     Text("Remove")
                 }
