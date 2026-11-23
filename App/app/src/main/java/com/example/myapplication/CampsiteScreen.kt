@@ -194,6 +194,7 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
                     user.submitReview(campsite, rating, reviewText)
 
                     review = ""
+                    rating = 1
                 }
             ) {
                 Text("Submit review")
