@@ -258,4 +258,12 @@ class Camper: User {
                 onResult("Could not find lottery: " + error.message)
             }
     }
+
+    fun submitReview(campsite: Campsite, reviewText: String) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+        val review = mapOf("user_id" to uid, "campsite_id" to campsite.id, "text" to reviewText)
+
+        FirebaseFirestore.getInstance().collection("reviews").add(review)
+    }
 }

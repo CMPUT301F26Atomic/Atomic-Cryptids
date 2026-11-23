@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,7 +30,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User) {
     var message by remember { mutableStateOf("") }
-
+    var review by remember { mutableStateOf("") }
     var lotteryDetails by remember {
         mutableStateOf<Map<String, Any>?>(null)
     }
@@ -140,5 +141,25 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
         Spacer(modifier = Modifier.height(16.dp))
 
         Text("Occupancy: ${campsite.getOccupancy()}")
+
+        if (user is Camper) {
+            TextField(
+                value = review,
+                onValueChange = { review = it },
+                label = { Text("Add review") }
+            )
+
+            Button(
+                onClick = {
+                    val reviewText = review
+
+                    user.submitReview(campsite, reviewText)
+
+                    review = ""
+                }
+            ) {
+                Text("Submit review")
+            }
+        }
     }
 }
