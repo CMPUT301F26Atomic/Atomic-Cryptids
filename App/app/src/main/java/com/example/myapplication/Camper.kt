@@ -259,10 +259,10 @@ class Camper: User {
             }
     }
 
-    fun submitReview(campsite: Campsite, reviewText: String) {
+    fun submitReview(campsite: Campsite, rating: Int, reviewText: String) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
-        val review = mapOf("user_id" to uid, "campsite_id" to campsite.id, "text" to reviewText)
+        val review = mapOf("user_id" to uid, "campsite_id" to campsite.id, "rating" to rating, "text" to reviewText)
 
         FirebaseFirestore.getInstance().collection("reviews").add(review)
     }

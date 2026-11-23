@@ -1,12 +1,21 @@
 package com.example.myapplication
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,10 +27,14 @@ import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import com.google.firebase.firestore.FirebaseFirestore
 
 /**
  * Screen that displays campsite details
+ *
+ * Resources:
+ * For star rating: https://dev.to/myougatheaxo/star-rating-ui-in-compose-custom-rating-bar-implementation-2hjm
  *
  * @param navController controller used for navigating between screens
  * @param campsite campsite object which the details are for
@@ -31,6 +44,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User) {
     var message by remember { mutableStateOf("") }
     var review by remember { mutableStateOf("") }
+    var rating by remember { mutableIntStateOf(1) }
     var lotteryDetails by remember {
         mutableStateOf<Map<String, Any>?>(null)
     }
@@ -45,7 +59,7 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
             }
     }
 
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(modifier = Modifier.fillMaxWidth().verticalScroll(rememberScrollState())) {
         Spacer(modifier = Modifier.height(24.dp))
         Button(
             onClick = {
@@ -143,6 +157,30 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
         Text("Occupancy: ${campsite.getOccupancy()}")
 
         if (user is Camper) {
+            Row(modifier = Modifier.fillMaxWidth()) {
+                repeat(5) { i ->
+                    val isFilled = rating > i
+
+                    IconButton(
+                        onClick = { rating = i + 1 }
+                    ) {
+                        Icon(
+                            imageVector =
+                                if (isFilled) {
+                                    Icons.Filled.Star
+                                }
+                                else {
+                                    Icons.Outlined.Star
+                                },
+                            contentDescription = "Rating ${i + 1}",
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+            Text("Rating: $rating")
+
             TextField(
                 value = review,
                 onValueChange = { review = it },
@@ -153,7 +191,7 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
                 onClick = {
                     val reviewText = review
 
-                    user.submitReview(campsite, reviewText)
+                    user.submitReview(campsite, rating, reviewText)
 
                     review = ""
                 }
