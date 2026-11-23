@@ -50,10 +50,19 @@ fun MyReservationsScreen(navController: NavController) {
         )
     }
 
+
+
+    Spacer(modifier = Modifier.height(16.dp))
+
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding()
             .verticalScroll(rememberScrollState())
     ) {
+        // added this button that takes user to past reservations
+        Button(onClick = { navController.navigate("MyPastReservations") }) {
+            Text("Past reservations")
+        }
+
         Button(onClick = { navController.popBackStack() }) { Text("Back") }
 
         Spacer(modifier = Modifier.height(16.dp))

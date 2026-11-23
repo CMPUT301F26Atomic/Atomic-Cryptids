@@ -148,6 +148,9 @@ fun CampsiteApp() {
         composable("myreservations") {
             MyReservationsScreen(navController)
         }
+        composable("mypastreservations") {
+            MyPastReservationsScreen(navController)
+        }
         composable("ownerreservations") {
             OwnerReservationsScreen(navController)
         }
