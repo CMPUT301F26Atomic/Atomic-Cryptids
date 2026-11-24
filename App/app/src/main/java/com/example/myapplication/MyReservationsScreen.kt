@@ -59,7 +59,7 @@ fun MyReservationsScreen(navController: NavController) {
             .verticalScroll(rememberScrollState())
     ) {
         // added this button that takes user to past reservations
-        Button(onClick = { navController.navigate("MyPastReservations") }) {
+        Button(onClick = { navController.navigate("mypastreservations") }) {
             Text("Past reservations")
         }
 

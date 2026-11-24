@@ -124,6 +124,7 @@ data class Reservation(
                 .addOnSuccessListener { result ->
                     val reservations = result.documents
                         .mapNotNull { fromMap(it.id, it.data ?: return@mapNotNull null) }
+                        .filter { it.endDateMillis > System.currentTimeMillis() }
                         .sortedByDescending { it.startDateMillis }
                     onResult(reservations)
                 }
@@ -141,7 +142,9 @@ data class Reservation(
                 .addOnSuccessListener { result ->
                     val reservations = result.documents
                         .mapNotNull { fromMap(it.id, it.data ?: return@mapNotNull null) }
-                        .filter { !it.isActive() }
+                        .filter {
+                            it.endDateMillis <= System.currentTimeMillis() && it.status != Status.CANCELLED
+                        }
                         .sortedByDescending { it.startDateMillis }
                     onResult(reservations)
                 }
