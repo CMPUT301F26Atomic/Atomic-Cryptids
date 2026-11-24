@@ -27,10 +27,11 @@ import androidx.compose.ui.unit.dp
 /**
  * Screen for admin
  *
- * Option to view profiles of campers
+ * Option to view profiles of campers and campsites
  *
  * @param navController controller object for navigating between screens
  * @param admin object for user accessing
+ * @param onSelectCampsite callback function for result clicking on a campsite
  */
 @Composable
 fun AdminScreen(
@@ -43,6 +44,7 @@ fun AdminScreen(
     var message by remember { mutableStateOf("") }
     var campers by remember { mutableStateOf<List<Camper>?>(null) }
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
+    var showConfirmation by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
 
@@ -105,11 +107,35 @@ fun AdminScreen(
         Text(message)
 
         campsites?.forEach { campsite ->
-            Button(onClick = {
-                onSelectCampsite(campsite)
-                navController.navigate("campsite")
-            }) {
-                Text("${campsite.getName()} - ${campsite.getLocation()}")
+            Row(modifier = Modifier.fillMaxWidth()) {
+                Button(onClick = {
+                    onSelectCampsite(campsite)
+                    navController.navigate("campsite")
+                }) {
+                    Text("${campsite.getName()} - ${campsite.getLocation()}")
+                }
+
+                Spacer(modifier = Modifier.width(16.dp))
+
+                if (showConfirmation) {
+                    ConfirmationPrompt(
+                        "Confirm campsite removal",
+                        "Would you like to delete this campsite?",
+                        onConfirm = {
+                            admin.removeCampsite(campsite)
+                            showConfirmation = false
+                            campsites = campsites?.filter { it != campsite }
+                        },
+                        onDecline = { showConfirmation = false }
+                    )
+                }
+
+                Button(onClick = {
+                    showConfirmation = true
+                }) {
+                    Text("Remove")
+                }
+
             }
 
             Spacer(modifier = Modifier.height(16.dp))

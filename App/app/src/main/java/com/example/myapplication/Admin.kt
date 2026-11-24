@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.util.Log
+import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
@@ -8,7 +9,7 @@ import com.google.firebase.firestore.FirebaseFirestore
 /*
 Admin is an instance of interface User. Will be completed in the second sprint
  */
-class Admin: User {
+class Admin : User {
     override val role = "admin"
 
     /**
@@ -19,21 +20,27 @@ class Admin: User {
      * @param onResult Callback that receives the list of retrieved campsites.
      * @param onError Callback that receives an error message if retrieval fails.
      */
-    fun getCampers(onResult: (List<Camper>) -> Unit, onError: (String) -> Unit) {
-
-        FirebaseFirestore.getInstance().collection("users").whereEqualTo("role", "camper").get()
+    fun getCampers(
+        onResult: (List<Camper>) -> Unit,
+        onError: (String) -> Unit,
+    ) {
+        FirebaseFirestore
+            .getInstance()
+            .collection("users")
+            .whereEqualTo("role", "camper")
+            .get()
             .addOnSuccessListener { result ->
-                val campers = result.documents.map { doc ->
-                    Camper(
-                        doc.id,
-                        doc.getString("name") ?: "",
-                        doc.getString("email") ?: "",
-                        doc.getString("phone") ?: "",
+                val campers =
+                    result.documents.map { doc ->
+                        Camper(
+                            doc.id,
+                            doc.getString("name") ?: "",
+                            doc.getString("email") ?: "",
+                            doc.getString("phone") ?: "",
                         )
-                }
+                    }
                 onResult(campers)
-            }
-            .addOnFailureListener {
+            }.addOnFailureListener {
                 onError("Error: ${it.message}")
             }
     }
@@ -44,8 +51,26 @@ class Admin: User {
      * @param camper camper object containing the id attribute used to query the database
      */
     fun removeCamper(camper: Camper) {
-        FirebaseFirestore.getInstance().collection("users").document(camper.id)
+        FirebaseFirestore
+            .getInstance()
+            .collection("users")
+            .document(camper.id)
             .delete()
             .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
     }
+
+    /**
+     * Allows admin to delete a campsite from the database
+     * Uses the id of the campsite to access it from the database
+     *
+     * @param campsite the campsite object which contains the information describing the campsite to be deleted
+     */
+    fun removeCampsite(campsite: Campsite) {
+        FirebaseFirestore
+            .getInstance()
+            .collection("campsites")
+            .document(campsite.id)
+            .delete()
+    }
 }
+
