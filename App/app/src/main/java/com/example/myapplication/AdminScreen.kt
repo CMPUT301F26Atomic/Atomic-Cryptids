@@ -82,10 +82,22 @@ fun AdminScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
+                if (showConfirmation) {
+                    ConfirmationPrompt(
+                        "Confirm campsite removal",
+                        "Would you like to delete this campsite?",
+                        onConfirm = {
+                            admin.removeCamper(camper)
+                            showConfirmation = false
+                            campers = campers?.filter { it != camper }
+                        },
+                        onDecline = { showConfirmation = false }
+                    )
+                }
+
                 Button(
                     onClick = {
-                        admin.removeCamper(camper)
-                        campers = campers?.filter { it != camper }
+                        showConfirmation = true
                     }
                 ) {
                     Text("Remove")
