@@ -5,9 +5,12 @@ import kotlin.random.Random
 
 /**
  * Draws lottery winners once a lottery's registration period has ended.
- * The draw runs lazily whenever [runDraws] is called and is protected by a
- * Firestore transaction on drawCompleted, so concurrent devices can never
- * draw the same lottery twice.
+ * The draw runs lazily whenever [runDraws] is called. A firestore transatcion 
+ * on drawCompleted keeps the process atomic, so concurrent devices can never
+ * draw the same lottery multiple times.
+ *
+ * TODO: Need to confirm whether both waitlist and littery list have same weight
+ * for drawing lottery or we draw from only one or both but with a probability weight.
  */
 object LotteryDraw {
 
