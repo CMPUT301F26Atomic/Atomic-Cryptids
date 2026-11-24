@@ -84,8 +84,8 @@ fun AdminScreen(
 
                 if (showConfirmation) {
                     ConfirmationPrompt(
-                        "Confirm campsite removal",
-                        "Would you like to delete this campsite?",
+                        "Confirm profile removal",
+                        "Would you like to delete this profile?",
                         onConfirm = {
                             admin.removeCamper(camper)
                             showConfirmation = false
