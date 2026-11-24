@@ -12,6 +12,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.Reservation
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.graphics.asImageBitmap
 
 /**
  * Displays the details of a campsite belonging to the current owner.
@@ -35,6 +38,12 @@ fun OwnerCampsiteDetailsScreen(
             { bookedReservations = it },
             { bookedStatus = it },
         )
+    }
+
+    val qrBitmap = remember(campsite.id) {
+        QrCodeUtil
+            .generateBitmap(QrCodeUtil.encodePayload(campsite.id))
+            ?.asImageBitmap()
     }
 
     Column(
@@ -62,6 +71,19 @@ fun OwnerCampsiteDetailsScreen(
         )
 
         HorizontalDivider()
+
+        HorizontalDivider()
+
+        Text("Scan to open this campsite", style = MaterialTheme.typography.titleMedium)
+        if (qrBitmap != null) {
+            Image(
+                bitmap = qrBitmap,
+                contentDescription = "QR code for ${campsite.getName()}",
+                modifier = Modifier.size(220.dp),
+            )
+        } else {
+            Text("Could not generate QR code.")
+        }
 
         Text("Location: ${campsite.getLocation()}")
         Text("Description: ${campsite.getDescription()}")
