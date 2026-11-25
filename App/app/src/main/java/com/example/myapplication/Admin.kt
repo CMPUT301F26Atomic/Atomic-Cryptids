@@ -1,35 +1,55 @@
 package com.example.myapplication
 
 import com.atomiccryptids.campsiteapp.User
-import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-/*
-Admin is an instance of interface User. Will be completed in the second sprint
- */
-class Admin: User {
-    override val role = "admin"
+class Admin(override val uid: String,override val username: String) :
+    User {
+    override val role: String = "admin"
 
-    /**
-     * Gets all camper profiles from Firestore
-     *
-     * Converts each camper user to a camper object
-     *
-     * @param onResult Callback that receives the list of retrieved campsites.
-     * @param onError Callback that receives an error message if retrieval fails.
-     */
-    fun getCampers(onResult: (List<Camper>) -> Unit, onError: (String) -> Unit) {
-
-        FirebaseFirestore.getInstance().collection("users").whereEqualTo("role", "camper").get()
+    fun getCampers(
+        onResult: (List<Camper>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .whereEqualTo("role", "camper")
+            .get()
             .addOnSuccessListener { result ->
-                val campers = result.documents.map { doc ->
-                    Camper()
+                val campers = try {
+                    result.documents.map { doc ->
+                        val savedUid = requireNotNull(
+                            doc.getString("uid")
+                        ) {
+                            "A camper profile is missing its UID."
+                        }
+
+                        val savedUsername = requireNotNull(
+                            doc.getString("username")
+                        ) {
+                            "A camper profile is missing its username."
+                        }
+
+                        require(savedUid == doc.id) {
+                            "A camper profile has an incorrect UID."
+                        }
+
+                        Camper(
+                            uid = savedUid,
+                            username = savedUsername
+                        )
+                    }
+                } catch (error: IllegalArgumentException) {
+                    onError(
+                        error.message ?: "Could not read camper profiles."
+                    )
+                    return@addOnSuccessListener
                 }
+
                 onResult(campers)
             }
             .addOnFailureListener {
-                onError("Error: ${it.message}")
+                onError(it.message ?: "Could not load campers.")
             }
-
     }
 }

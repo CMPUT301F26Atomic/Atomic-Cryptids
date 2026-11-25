@@ -1,33 +1,31 @@
 package com.atomiccryptids.campsiteapp
-
 import android.util.Log
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.SetOptions
-import com.google.firebase.firestore.FieldValue
+
+/**
+ * Retrieves all campsites from Firestore.
+ *
+ * Converts each campsite document into a Campsite object,
+ * including its location, capacity, and availability dates.
+ * Campsites are returned without filtering.
+ *
+ * @param onResult Callback that receives the list of retrieved campsites.
+ * @param onError Callback that receives an error message if retrieval fails.
+ */
 
 interface User {
+    val uid: String
+    val username: String
     val role: String
 
-    fun saveUser() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(mapOf("role" to role), SetOptions.merge())
-            .addOnFailureListener { Log.e("User", "saveUser failed", it) }
-    }
-
-    /**
-     * Retrieves all campsites from Firestore.
-     *
-     * Converts each campsite document into a Campsite object,
-     * including its location, capacity, and availability dates.
-     * Campsites are returned without filtering.
-     *
-     * @param onResult Callback that receives the list of retrieved campsites.
-     * @param onError Callback that receives an error message if retrieval fails.
-     */
-    fun searchCampsites(onResult: (List<Campsite>) -> Unit, onError: (String) -> Unit) {
-        FirebaseFirestore.getInstance().collection("campsites").get()
+    fun searchCampsites(
+        onResult: (List<Campsite>) -> Unit,
+        onError: (String) -> Unit
+    ) {
+        FirebaseFirestore.getInstance()
+            .collection("campsites")
+            .get()
             .addOnSuccessListener { result ->
                 val campsites = result.documents.map { doc ->
                     Campsite(
@@ -38,27 +36,43 @@ interface User {
                         description = doc.getString("description") ?: "",
                         rules = doc.getString("rules") ?: "",
                         location = doc.getString("location") ?: "",
-                        availableStartDate = doc.getLong("availableStartDate"),
-                        availableEndDate = doc.getLong("availableEndDate")
+                        availableStartDate =
+                            doc.getLong("availableStartDate"),
+                        availableEndDate =
+                            doc.getLong("availableEndDate")
                     )
                 }
+
                 onResult(campsites)
             }
             .addOnFailureListener {
-                onError("Error: ${it.message}")
+                onError(it.message ?: "Could not load campsites.")
             }
     }
 
-    fun optNotification(boolean: Boolean): String {
-        return if (boolean) "user will receive notification" else "user won't receive notifications"
-        /*
-        I am too tired and it's late. I'll fix this part later
-         */
+    fun optNotification(enabled: Boolean): String {
+        return if (enabled) {
+            "User will receive notifications"
+        } else {
+            "User will not receive notifications"
+        }
     }
+
     fun deleteProfile() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        FirebaseFirestore.getInstance().collection("users").document(uid)
+        val currentUid =
+            FirebaseAuth.getInstance().currentUser?.uid
+
+        if (currentUid != uid) {
+            Log.e("User", "Cannot delete another user's profile")
+            return
+        }
+
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(uid)
             .delete()
-            .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
+            .addOnFailureListener {
+                Log.e("User", "deleteProfile failed", it)
+            }
     }
 }

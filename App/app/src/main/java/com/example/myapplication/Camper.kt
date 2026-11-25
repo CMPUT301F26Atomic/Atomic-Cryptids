@@ -8,7 +8,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
-class Camper: User {
+class Camper (override val uid: String,override val username: String): User {
 
     override val role = "camper"
 
@@ -29,17 +29,6 @@ class Camper: User {
         } else {
             return "no notifications"
         }
-    }
-    /**
-    saves current users attributes to firebase under collection users.
-    It records the role of the user.
-    prints error message if save fails
-     */
-    override fun saveUser() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(mapOf("role" to role), SetOptions.merge())
-            .addOnFailureListener { Log.e("User", "saveUser failed", it) }
     }
     /**
     deletes current users profile from firebase.

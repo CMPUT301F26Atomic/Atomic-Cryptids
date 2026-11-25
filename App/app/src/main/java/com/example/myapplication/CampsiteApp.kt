@@ -1,56 +1,132 @@
 package com.example.myapplication
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.google.firebase.auth.FirebaseAuth
-import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 
 @Composable
-fun CampsiteApp() {
+fun CampsiteApp(session: AppSessionViewModel) {
+    val state by session.accounts.state.collectAsState()
+    val profile = state.profile
+
+    // Display login until an account has been verified.
+    if (profile == null) {
+        LoginScreen(
+            state = state,
+            accounts = session.accounts
+        )
+        return
+    }
+
     val navController = rememberNavController()
 
+    val user: User = remember(profile) {
+        when (profile.role) {
+            "camper" -> Camper(
+                uid = profile.uid,
+                username = profile.username
+            )
 
-    var user by rememberSaveable { mutableStateOf<User?>(null) }
-    var campsite by rememberSaveable { mutableStateOf<Campsite?>(null) }
-    
-    NavHost(navController = navController, startDestination = "home") {
-        composable("home") { HomeScreen(user, navController) }
+            "campsite owner" -> CampsiteOwner(
+                uid = profile.uid,
+                username = profile.username
+            )
+
+            "admin" -> Admin(
+                uid = profile.uid,
+                username = profile.username
+            )
+
+            else -> error("Unknown role: ${profile.role}")
+        }
+    }
+
+    var campsite by session::campsite
+
+    NavHost(
+        navController = navController,
+        startDestination = profile.route
+    ) {
+        composable("home") {
+            ReturnToRoleHome(navController, profile.route)
+        }
+
         composable("login") {
+            LaunchedEffect(Unit) {
+                // Clear the app session but preserve the Firebase UID.
+                session.logout()
+            }
+        }
 
-            LoginScreen(
+        composable("camper") {
+            val camper = user as? Camper
+
+            if (camper == null) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
+            CamperScreen(
                 navController,
-                onSelectCamper = {
-                    user = Camper()
-                    (user as Camper).saveUser()
-                },
-                onSelectOwner = {
-                    user = CampsiteOwner()
-                    (user as CampsiteOwner).saveUser()
-                },
-                onSelectAdmin = {
-                    user = Admin()
-                    (user as Admin).saveUser()
+                camper,
+                onSelectCampsite = { selected ->
+                    campsite = selected
                 }
             )
         }
-        composable("camper") {
-            CamperScreen(
-                navController,
-                user as Camper,
-                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
+
+        composable("owner") {
+            val owner = user as? CampsiteOwner
+
+            if (owner == null) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
+            OwnerScreen(
+                navController = navController,
+                owner = owner,
+                onSelectCampsite = { selected ->
+                    campsite = selected
+                }
             )
         }
+
+        composable("admin") {
+            val admin = user as? Admin
+
+            if (admin == null) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
+            AdminScreen(
+                navController,
+                admin,
+                onSelectCampsite = { selected ->
+                    campsite = selected
+                }
+            )
+        }
+
         composable("owner-campsite-details") {
+            val selected = campsite
+
+            if (selected == null || user !is CampsiteOwner) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             OwnerCampsiteDetailsScreen(
-                campsite = campsite as Campsite,
+                campsite = selected,
                 onBack = {
                     navController.popBackStack()
                 },
@@ -64,9 +140,17 @@ fun CampsiteApp() {
         }
 
         composable("owner-waitlist") {
+            val selected = campsite
+            val owner = user as? CampsiteOwner
+
+            if (selected == null || owner == null) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             OwnerWaitlistScreen(
-                campsite = campsite as Campsite,
-                owner = user as CampsiteOwner,
+                campsite = selected,
+                owner = owner,
                 onBack = {
                     navController.popBackStack()
                 }
@@ -74,23 +158,31 @@ fun CampsiteApp() {
         }
 
         composable("edit-owner-campsite") {
+            val selected = campsite
+            val owner = user as? CampsiteOwner
+
+            if (selected == null || owner == null) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             EditOwnerCampsiteScreen(
-                campsite = campsite as Campsite,
-                owner = user as CampsiteOwner,
+                campsite = selected,
+                owner = owner,
                 onBack = {
                     navController.popBackStack()
                 },
                 onSaved = {
-                    val selectedId = (campsite as Campsite).id
+                    val selectedId = selected.id
 
-                    (user as CampsiteOwner).getOwnedCampsites(
+                    owner.getOwnedCampsites(
                         onResult = { updatedCampsites ->
-                            val updatedCampsite = updatedCampsites.firstOrNull {
+                            val updated = updatedCampsites.firstOrNull {
                                 it.id == selectedId
                             }
 
-                            if (updatedCampsite != null) {
-                                campsite = updatedCampsite
+                            if (updated != null) {
+                                campsite = updated
                             }
 
                             navController.popBackStack()
@@ -103,56 +195,110 @@ fun CampsiteApp() {
             )
         }
 
-        composable("owner") {
-            OwnerScreen(
-                navController = navController,
-                owner = user as CampsiteOwner,
-                onSelectCampsite = { selectedCampsite ->
-                    campsite = selectedCampsite
+        composable("campsite") {
+            val selected = campsite
+
+            if (selected == null) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
+            CampsiteScreen(
+                navController,
+                selected,
+                user
+            )
+        }
+
+        composable("lottery") {
+            val owner = user as? CampsiteOwner
+
+            if (owner == null) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
+            LotteryScreen(
+                ownerUid = owner.uid,
+                onBack = {
+                    navController.popBackStack()
                 }
             )
         }
-        composable("admin") {
-            AdminScreen(
-                navController,
-                user as Admin,
-                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
-            )
-        }
-        composable("campsite") {
-            CampsiteScreen(
-                navController,
-                campsite as Campsite,
-                user as User
-            )
-        }
-        composable("lottery") {
-            val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-            LotteryScreen(
-                ownerUid = uid,
-                onBack = { navController.popBackStack() }
-            )
-        }
+
         composable("wins") {
+            if (user !is Camper) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             LotteryWinsScreen(
                 navController,
-                onSelectCampsite = { selectedCampsite -> campsite = selectedCampsite }
+                onSelectCampsite = { selected ->
+                    campsite = selected
+                }
             )
         }
+
         composable("reserve") {
+            val selected = campsite
+
+            if (selected == null || user !is Camper) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             ReserveScreen(
                 navController,
-                campsite as Campsite
+                selected
             )
         }
+
         composable("myreservations") {
+            if (user !is Camper) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             MyReservationsScreen(navController)
         }
+
         composable("mypastreservations") {
+            if (user !is Camper) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             MyPastReservationsScreen(navController)
         }
+
         composable("ownerreservations") {
+            if (user !is CampsiteOwner) {
+                ReturnToRoleHome(navController, profile.route)
+                return@composable
+            }
+
             OwnerReservationsScreen(navController)
+        }
+    }
+}
+
+/**
+ * Returns to the logged-in user's home screen when a destination
+ * lacks its required campsite or has the wrong role.
+ */
+@Composable
+private fun ReturnToRoleHome(
+    navController: NavHostController,
+    route: String
+) {
+    LaunchedEffect(navController, route) {
+        navController.navigate(route) {
+            popUpTo(navController.graph.id) {
+                inclusive = false
+            }
+
+            launchSingleTop = true
         }
     }
 }

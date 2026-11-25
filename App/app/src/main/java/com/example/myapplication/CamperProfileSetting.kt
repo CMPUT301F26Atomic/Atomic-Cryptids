@@ -188,7 +188,10 @@ fun AppPolicyLink() {
 @Composable
 fun CamperProfileSettingPreview() {
     CamperProfileSetting(
-        camper = Camper(),
+        camper = Camper(
+            uid = "preview-uid",
+            username = "PreviewCamper"
+        ),
         onBack = {},
         onDeleted = {}
     )
