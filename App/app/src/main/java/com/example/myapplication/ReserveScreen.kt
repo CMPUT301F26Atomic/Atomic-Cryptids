@@ -1,16 +1,22 @@
 package com.example.myapplication
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.MaterialTheme
@@ -50,45 +56,156 @@ fun ReserveScreen(navController: NavController, campsite: Campsite) {
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Button(onClick = { navController.popBackStack() }) { Text("Back") }
-
-        Spacer(modifier = Modifier.height(16.dp))
+        TextButton(onClick = { navController.popBackStack() }) {
+            Text("Back")
+        }
 
         Text(
-            "${campsite.getName()} - ${campsite.getLocation()}",
-            style = MaterialTheme.typography.headlineMedium
+            text = "Reserve campsite",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
         )
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Choose the dates for your stay.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.primaryContainer
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = campsite.getName(),
+                    style = MaterialTheme.typography.titleLarge
+                )
+
+                Text(
+                    text = campsite.getLocation(),
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+        }
 
         val availStart = campsite.getAvailableStartDate()
         val availEnd = campsite.getAvailableEndDate()
-        if (availStart != null && availEnd != null) {
-            Text("Available: ${formatUtcDate(availStart)} - ${formatUtcDate(availEnd)}")
-        } else {
-            Text("No availability dates set for this campsite.")
-        }
 
-        if (existing.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            Text("Already booked:")
-            existing.forEach {
-                Text("${formatUtcDate(it.startDateMillis)} - ${formatUtcDate(it.endDateMillis)}")
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Availability",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                if (availStart != null && availEnd != null) {
+                    Text(
+                        text = "Available dates",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Text(
+                        text = "${formatUtcDate(availStart)} - ${formatUtcDate(availEnd)}",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                } else {
+                    Text("No availability dates set for this campsite.")
+                }
+
+                if (existing.isNotEmpty()) {
+                    HorizontalDivider()
+
+                    Text(
+                        text = "Already booked:",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    existing.forEach {
+                        Text(
+                            text = "${formatUtcDate(it.startDateMillis)} - ${formatUtcDate(it.endDateMillis)}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Your stay",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-        Row {
-            Button(onClick = { showStartPicker = true }) {
-                Text(startDate?.let { formatUtcDate(it) } ?: "Check-in date")
-            }
-            Spacer(modifier = Modifier.width(8.dp))
-            Button(onClick = { showEndPicker = true }) {
-                Text(endDate?.let { formatUtcDate(it) } ?: "Check-out date")
+                Text(
+                    text = "Check-in",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                OutlinedButton(
+                    onClick = { showStartPicker = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                ) {
+                    Text(startDate?.let { formatUtcDate(it) } ?: "Check-in date")
+                }
+
+                Text(
+                    text = "Check-out",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                OutlinedButton(
+                    onClick = { showEndPicker = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                ) {
+                    Text(endDate?.let { formatUtcDate(it) } ?: "Check-out date")
+                }
             }
         }
 
@@ -124,39 +241,48 @@ fun ReserveScreen(navController: NavController, campsite: Campsite) {
             ) { DatePicker(state = pickerState) }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = {
-            val error = ReservationValidator.validateRange(
-                startDateMillis = startDate,
-                endDateMillis = endDate,
-                availableStartDate = availStart,
-                availableEndDate = availEnd,
-                existingReservations = existing,
-            )
-            if (error != null) {
-                status = error
-            } else {
-                Reservation(
-                    campsiteId = campsite.id,
-                    campsiteName = campsite.getName(),
-                    campsiteLocation = campsite.getLocation(),
-                    userId = uid,
-                    startDateMillis = startDate!!,
-                    endDateMillis = endDate!!,
-                ).save { result ->
-                    status = if (result == "Saved") "Reserved!" else result
-                    if (result == "Saved") {
-                        startDate = null
-                        endDate = null
-                        refresh++
+        Button(
+            onClick = {
+                val error = ReservationValidator.validateRange(
+                    startDateMillis = startDate,
+                    endDateMillis = endDate,
+                    availableStartDate = availStart,
+                    availableEndDate = availEnd,
+                    existingReservations = existing,
+                )
+                if (error != null) {
+                    status = error
+                } else {
+                    Reservation(
+                        campsiteId = campsite.id,
+                        campsiteName = campsite.getName(),
+                        campsiteLocation = campsite.getLocation(),
+                        userId = uid,
+                        startDateMillis = startDate!!,
+                        endDateMillis = endDate!!,
+                    ).save { result ->
+                        status = if (result == "Saved") "Reserved!" else result
+                        if (result == "Saved") {
+                            startDate = null
+                            endDate = null
+                            refresh++
+                        }
                     }
                 }
-            }
-        }) { Text("Reserve") }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+        ) {
+            Text("Reserve")
+        }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        Text(status)
+        if (status.isNotEmpty()) {
+            Text(
+                text = status,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }

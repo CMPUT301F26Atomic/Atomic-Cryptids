@@ -1,9 +1,23 @@
 package com.example.myapplication
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,33 +50,138 @@ fun CamperProfileSetting(
 ) {
     var message by remember { mutableStateOf("") }
     var notificationsOn by remember { mutableStateOf(false) }
+
     Column(
-        modifier = modifier.padding(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+        modifier = modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Button(onClick = onBack) { Text("Back") }
+        TextButton(onClick = onBack) { Text("Back") }
+
+        Text(
+            text = "Profile settings",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+        Text(
+            text = "Manage your account and preferences.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Notifications",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Manage your notification preferences.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
 // check to see if its changed in firebase
-        Button(onClick = {
-            notificationsOn = !notificationsOn
-            message = camper.optNotification(notificationsOn)
-        }) { Text("Toggle notifications") }
+                OutlinedButton(
+                    onClick = {
+                        notificationsOn = !notificationsOn
+                        message = camper.optNotification(notificationsOn)
+                    },
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text("Toggle notifications")
+                }
 
-        Button(onClick = {
-            camper.deleteProfile()
-            onDeleted()
-        }) { Text("Delete profile") }
+                if (message.isNotEmpty()) {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                }
+            }
+        }
 
-        AppPolicyLink()
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Privacy and policies",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
 
-        Text(message)
+                AppPolicyLink()
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Account management",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.error
+                )
+
+                Button(
+                    onClick = {
+                        camper.deleteProfile()
+                        onDeleted()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error,
+                        contentColor = MaterialTheme.colorScheme.onError
+                    )
+                ) {
+                    Text("Delete profile")
+                }
+            }
+        }
     }
 }
 
 @Composable
 fun AppPolicyLink() {
     val uriHandler = LocalUriHandler.current
-    Button(onClick = { uriHandler.openUri("https://sepahvandsepehr.github.io/app-policy/") })
-    { Text("App Policy") }
+    OutlinedButton(
+        onClick = { uriHandler.openUri("https://sepahvandsepehr.github.io/app-policy/") },
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Text("App Policy")
+    }
 }
 
 @Preview(showBackground = true)
