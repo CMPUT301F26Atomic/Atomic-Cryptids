@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -20,9 +21,12 @@ import androidx.compose.runtime.setValue
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
+import com.atomiccryptids.campsiteapp.Reservation
 
 /**
  * Screen for admin
@@ -44,7 +48,8 @@ fun AdminScreen(
     var message by remember { mutableStateOf("") }
     var campers by remember { mutableStateOf<List<Camper>?>(null) }
     var campsites by remember { mutableStateOf<List<Campsite>?>(null) }
-    var showConfirmation by remember { mutableStateOf(false) }
+    var campsiteToDelete by remember { mutableStateOf<Campsite?>(null) }
+    var profileToDelete by remember { mutableStateOf<Camper?>(null) }
 
     Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
 
@@ -82,22 +87,9 @@ fun AdminScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                if (showConfirmation) {
-                    ConfirmationPrompt(
-                        "Confirm profile removal",
-                        "Would you like to delete this profile?",
-                        onConfirm = {
-                            admin.removeCamper(camper)
-                            showConfirmation = false
-                            campers = campers?.filter { it != camper }
-                        },
-                        onDecline = { showConfirmation = false }
-                    )
-                }
-
                 Button(
                     onClick = {
-                        showConfirmation = true
+                        profileToDelete = camper
                     }
                 ) {
                     Text("Remove")
@@ -129,21 +121,8 @@ fun AdminScreen(
 
                 Spacer(modifier = Modifier.width(16.dp))
 
-                if (showConfirmation) {
-                    ConfirmationPrompt(
-                        "Confirm campsite removal",
-                        "Would you like to delete this campsite?",
-                        onConfirm = {
-                            admin.removeCampsite(campsite)
-                            showConfirmation = false
-                            campsites = campsites?.filter { it != campsite }
-                        },
-                        onDecline = { showConfirmation = false }
-                    )
-                }
-
                 Button(onClick = {
-                    showConfirmation = true
+                    campsiteToDelete = campsite
                 }) {
                     Text("Remove")
                 }
@@ -155,4 +134,43 @@ fun AdminScreen(
 
     }
 
+    profileToDelete?.let { camper ->
+        AlertDialog(
+            onDismissRequest = { profileToDelete = null },
+            title = { Text("Remove profile?") },
+            text = {
+                Text("Are you sure you want to remove this profile?")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    admin.removeCamper(camper)
+                    campsiteToDelete = null
+                    campers = campers?.filter { it != camper }
+                }) { Text("Ok") }
+            },
+            dismissButton = {
+                TextButton(onClick = { profileToDelete = null }) { Text("Decline") }
+            }
+        )
+    }
+
+    campsiteToDelete?.let { campsite ->
+        AlertDialog(
+            onDismissRequest = { campsiteToDelete = null },
+            title = { Text("Remove campsite?") },
+            text = {
+                Text("Are you sure you want to remove this campsite?")
+            },
+            confirmButton = {
+                TextButton(onClick = {
+                    admin.removeCampsite(campsite)
+                    campsiteToDelete = null
+                    campsites = campsites?.filter { it != campsite }
+                }) { Text("Ok") }
+            },
+            dismissButton = {
+                TextButton(onClick = { campsiteToDelete = null }) { Text("Decline") }
+            }
+        )
+    }
 }
