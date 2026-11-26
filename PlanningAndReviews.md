@@ -14,21 +14,23 @@ Each member was assigned a minimum of five issues, bringing the total to 30. Mem
 
 ### Seps
 
+- US 01.01.01
 - US 01.01.05
-- US 01.08.01
-- US 01.11.01
 - US 01.01.06
-- US 02.01.02
+- US 01.08.01
 - US 01.09.01
+- US 01.11.01
+- US 02.01.01
+- US 02.01.02
 
 ### Anshul
 
 - US 01.01.01
-- US 02.01.01
-- US 02.09.01
-- US 01.07.03
-- US 01.02.02
 - US 01.02.01
+- US 01.02.02
+- US 02.01.01
+- US 02.01.02
+- US 02.09.01
 
 ### Mason
 
@@ -39,22 +41,23 @@ Each member was assigned a minimum of five issues, bringing the total to 30. Mem
 - US 03.04.01
 - US 03.05.01
 
-### Kush
+### Khush
 
-- US 02.07.01
-- US 01.07.01
-- US 01.06.01
-- US 01.04.03
-- US 01.04.02
-- US 01.04.01
 - US 01.03.02
+- US 01.04.01
+- US 01.04.02
+- US 01.04.03
+- US 01.06.01
+- US 01.07.01
+- US 02.06.01
+- US 02.07.01
 
 ### Luke
 
-- US 02.04.06
-- US 02.04.02
 - US 02.04.01
+- US 02.04.02
 - US 02.04.05
+- US 02.04.06
 - US 02.04.07
 
 ### Colton

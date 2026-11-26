@@ -46,31 +46,52 @@ class Admin : User {
     }
 
     /**
-     * Removes a camper from the database
+     * Removes a camper profile from Firestore using their unique ID.
      *
-     * @param camper camper object containing the id attribute used to query the database
+     * @param camper The camper whose profile will be removed.
+     * @param onSuccess Callback invoked when deletion succeeds.
+     * @param onError Callback that receives an error message if deletion fails.
      */
-    fun removeCamper(camper: Camper) {
-        FirebaseFirestore
-            .getInstance()
+    fun removeCamper(
+        camper: Camper,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        FirebaseFirestore.getInstance()
             .collection("users")
             .document(camper.id)
             .delete()
-            .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener {
+                Log.e("Admin", "removeCamper failed", it)
+                onError("Error: ${it.message}")
+            }
     }
 
     /**
-     * Allows admin to delete a campsite from the database
-     * Uses the id of the campsite to access it from the database
+     * Removes a campsite from Firestore using its unique ID.
      *
-     * @param campsite the campsite object which contains the information describing the campsite to be deleted
+     * @param campsite The campsite to be removed.
+     * @param onSuccess Callback invoked when deletion succeeds.
+     * @param onError Callback that receives an error message if deletion fails.
      */
-    fun removeCampsite(campsite: Campsite) {
-        FirebaseFirestore
-            .getInstance()
+    fun removeCampsite(
+        campsite: Campsite,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        FirebaseFirestore.getInstance()
             .collection("campsites")
             .document(campsite.id)
             .delete()
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener {
+                Log.e("Admin", "removeCampsite failed", it)
+                onError("Error: ${it.message}")
+            }
     }
 }
-

@@ -1,19 +1,27 @@
 package com.example.myapplication
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,6 +29,7 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -40,6 +49,10 @@ fun LotteryWinsScreen(navController: NavController, onSelectCampsite: (Campsite)
     var status by remember { mutableStateOf("") }
     var refresh by remember { mutableIntStateOf(0) }
     val db = FirebaseFirestore.getInstance()
+
+    LaunchedEffect(Unit) {
+        LotteryDraw.runDraws { refresh++ }
+    }
 
     LaunchedEffect(refresh) {
         db.collection("lotteries")
@@ -77,49 +90,134 @@ fun LotteryWinsScreen(navController: NavController, onSelectCampsite: (Campsite)
     }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding()
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
             .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        Button(onClick = { navController.popBackStack() }) { Text("Back") }
+        TextButton(onClick = { navController.popBackStack() }) {
+            Text("Back")
+        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Lotteries you won",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
 
-        Text("Lotteries you won", style = MaterialTheme.typography.headlineMedium)
-
-        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Choose a campsite to reserve or decline your lottery win.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
 
         if (loaded && wins.isEmpty()) {
-            Text("No lottery wins yet.")
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = "No lottery wins yet.",
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
 
         wins.forEach { (lotteryId, campsite) ->
-            Text("${campsite.getName()} - ${campsite.getLocation()}")
-            Row {
-                Button(onClick = {
-                    onSelectCampsite(campsite)
-                    navController.navigate("reserve")
-                }) { Text("Reserve") }
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(
+                        text = campsite.getName(),
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
 
-                Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = campsite.getLocation(),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-                OutlinedButton(onClick = {
-                    db.collection("lotteries").document(lotteryId)
-                        .update(
-                            mapOf(
-                                "winners" to FieldValue.arrayRemove(uid),
-                                "declined" to FieldValue.arrayUnion(uid),
-                            )
-                        )
-                        .addOnSuccessListener {
-                            status = "Declined ${campsite.getName()}"
-                            refresh++
+                    HorizontalDivider()
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                onSelectCampsite(campsite)
+                                navController.navigate("reserve")
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Text("Reserve")
                         }
-                        .addOnFailureListener { status = "Error: ${it.message}" }
-                }) { Text("Decline") }
+
+                        OutlinedButton(
+                            onClick = {
+                                db.collection("lotteries").document(lotteryId)
+                                    .update(
+                                        mapOf(
+                                            "winners" to FieldValue.arrayRemove(uid),
+                                            "declined" to FieldValue.arrayUnion(uid),
+                                        )
+                                    )
+                                    .addOnSuccessListener {
+                                        status = "Declined ${campsite.getName()}"
+                                        refresh++
+                                    }
+                                    .addOnFailureListener { status = "Error: ${it.message}" }
+                            },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.outlinedButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            ),
+                            border = BorderStroke(
+                                1.dp,
+                                MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text("Decline")
+                        }
+                    }
+                }
             }
-            Spacer(modifier = Modifier.height(16.dp))
         }
 
-        Text(status)
+        if (status.isNotEmpty()) {
+            Text(
+                text = status,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onBackground
+            )
+        }
     }
 }

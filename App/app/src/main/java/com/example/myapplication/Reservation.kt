@@ -124,10 +124,33 @@ data class Reservation(
                 .addOnSuccessListener { result ->
                     val reservations = result.documents
                         .mapNotNull { fromMap(it.id, it.data ?: return@mapNotNull null) }
+                        .filter { it.endDateMillis > System.currentTimeMillis() }
                         .sortedByDescending { it.startDateMillis }
                     onResult(reservations)
                 }
                 .addOnFailureListener { onError("Error: ${it.message}") }
         }
+        // similar to the function above but shows reservations that are not active
+        fun fetchPastForUser(
+            userId: String,
+            onResult: (List<Reservation>) -> Unit,
+            onError: (String) -> Unit,
+        ) {
+            FirebaseFirestore.getInstance().collection(COLLECTION)
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener { result ->
+                    val reservations = result.documents
+                        .mapNotNull { fromMap(it.id, it.data ?: return@mapNotNull null) }
+                        .filter {
+                            it.endDateMillis <= System.currentTimeMillis() && it.status != Status.CANCELLED
+                        }
+                        .sortedByDescending { it.startDateMillis }
+                    onResult(reservations)
+                }
+                .addOnFailureListener { onError("Error: ${it.message}") }
+        }
+
+
     }
 }
