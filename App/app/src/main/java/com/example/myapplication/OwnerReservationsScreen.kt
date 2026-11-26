@@ -11,10 +11,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -31,15 +33,18 @@ import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.Reservation
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import org.w3c.dom.Text
 
 //US 02.07.01 View list of active reservations as campsite owner
 
 @Composable
-fun OwnerReservationsScreen(navController: NavController) {
+fun OwnerReservationsScreen(navController: NavController, owner: CampsiteOwner) {
     val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     var items by remember { mutableStateOf<List<Pair<Campsite, List<Reservation>>>>(emptyList()) }
     var loaded by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
+    var messageOpen by remember { mutableStateOf(false) }
+    var message by remember { mutableStateOf("") }
 
     LaunchedEffect(Unit) {
         FirebaseFirestore.getInstance().collection("campsites")
@@ -157,7 +162,7 @@ fun OwnerReservationsScreen(navController: NavController) {
                         )
                     }
 
-                    reservations.forEach {
+                    reservations.forEach { reservation ->
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
@@ -173,14 +178,43 @@ fun OwnerReservationsScreen(navController: NavController) {
                                 verticalArrangement = Arrangement.spacedBy(4.dp)
                             ) {
                                 Text(
-                                    text = "${formatUtcDate(it.startDateMillis)} - ${formatUtcDate(it.endDateMillis)}",
+                                    text = "${formatUtcDate(reservation.startDateMillis)} - ${formatUtcDate(reservation.endDateMillis)}",
                                     style = MaterialTheme.typography.titleMedium
                                 )
 
                                 Text(
-                                    text = "Camper: ${it.userId.take(8)}",
+                                    text = "Camper: ${reservation.userId.take(8)}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
+
+                                if (!messageOpen) {
+                                    Button(
+                                        onClick = {
+                                            messageOpen = true
+                                        }
+                                    ) {
+                                        Text("Message camper")
+                                    }
+                                }
+                                else {
+                                    OutlinedTextField(
+                                        value = message,
+                                        onValueChange = { input ->
+                                            message = input
+                                        },
+                                        label = { Text("Message") }
+                                    )
+
+                                    Button(
+                                        onClick = {
+                                            owner.sendMessage(reservation.userId, message)
+                                            message = ""
+                                            messageOpen = false
+                                        }
+                                    ) {
+                                        Text("Send")
+                                    }
+                                }
                             }
                         }
                     }
