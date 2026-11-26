@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -8,18 +10,25 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -71,128 +80,194 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
         return
     }
 
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding().verticalScroll(rememberScrollState())) {
-        Button(
-            onClick = {
-                navController.navigate("login") {
-                    popUpTo(0)
-                }
-            }
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("Back")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = { showSettings = true }) { Text("Profile settings") }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = { navController.navigate("wins") }) { Text("Lottery wins") }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = { navController.navigate("myreservations") }) { Text("My reservations") }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(onClick = {
-            message = ""
-            camper.searchCampsites({ campsites = it }, { message = it })
-        }) { Text("Search campsite") }
-        Text(message)
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        /*
-        UI elements for choosing filters
-        Filter options:
-        Location
-        Max occupancy
-        Tags
-        */
-        Row(modifier = Modifier.fillMaxWidth()) {
-
-            // Location
-            //From OpenAI, ChatGPT when prompted with:
-            //"How do I allow a user to choose various filters for a search function?"
-            FilterMenu(
-                menuData = locations,
-                selectedLocation = selectedLocation,
-                onLocationSelected = { location ->
-                    selectedLocation = location
-                }
-            )
-
-
-            OutlinedTextField(
-                value = guestCount,
-                onValueChange = { input ->
-                    if (input.isEmpty() ||
-                        (input.all { it.isDigit() } &&
-                                (input.toIntOrNull() ?: 0) > 0)
-                    ) {
-                        guestCount = input
+            TextButton(
+                onClick = {
+                    navController.navigate("login") {
+                        popUpTo(0)
                     }
-                },
-                label = { Text("Number of guests") },
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Number
-                ),
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth()
-            )
-        }
-            Button(
-                onClick = { showDatePicker = true }
+                }
             ) {
+                Text("Back")
+            }
+
+            TextButton(onClick = { showSettings = true }) {
+                Text("Profile settings")
+            }
+        }
+
+        Text(
+            text = "Search Campsites",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
+
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            OutlinedButton(
+                onClick = { navController.navigate("wins") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Lottery wins")
+            }
+
+            OutlinedButton(
+                onClick = { navController.navigate("myreservations") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("My reservations")
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+
                 Text(
-                    selectedDate?.let {
-                        java.text.SimpleDateFormat(
-                            "MMM dd, yyyy",
-                            java.util.Locale.getDefault()
-                        ).apply {
-                            timeZone = java.util.TimeZone.getTimeZone("UTC")
-                        }.format(java.util.Date(it))
-                    } ?: "Select date"
-                )
-            }
-
-            if (selectedDate != null) {
-                TextButton(
-                    onClick = { selectedDate = null }
-                ) {
-                    Text("Clear date")
-                }
-            }
-            if (showDatePicker) {
-                val datePickerState = rememberDatePickerState(
-                    initialSelectedDateMillis = selectedDate
+                    text = "Find a campsite",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
 
-                DatePickerDialog(
-                    onDismissRequest = { showDatePicker = false },
-                    confirmButton = {
-                        TextButton(
-                            onClick = {
-                                selectedDate = datePickerState.selectedDateMillis
-                                showDatePicker = false
+                /*
+                UI elements for choosing filters
+                Filter options:
+                Location
+                Max occupancy
+                Tags
+                */
+                Column(modifier = Modifier.fillMaxWidth()) {
+
+                    // Location
+                    //From OpenAI, ChatGPT when prompted with:
+                    //"How do I allow a user to choose various filters for a search function?"
+                    FilterMenu(
+                        menuData = locations,
+                        selectedLocation = selectedLocation,
+                        onLocationSelected = { location ->
+                            selectedLocation = location
+                        }
+                    )
+
+
+                    OutlinedTextField(
+                        value = guestCount,
+                        onValueChange = { input ->
+                            if (input.isEmpty() ||
+                                (input.all { it.isDigit() } &&
+                                        (input.toIntOrNull() ?: 0) > 0)
+                            ) {
+                                guestCount = input
                             }
-                        ) {
-                            Text("OK")
-                        }
-                    },
-                    dismissButton = {
-                        TextButton(onClick = { showDatePicker = false }) {
-                            Text("Cancel")
-                        }
-                    }
+                        },
+                        label = { Text("Number of guests") },
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Number
+                        ),
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
 
-
+                OutlinedButton(
+                    onClick = { showDatePicker = true },
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    DatePicker(state = datePickerState)
+                    Text(
+                        selectedDate?.let {
+                            java.text.SimpleDateFormat(
+                                "MMM dd, yyyy",
+                                java.util.Locale.getDefault()
+                            ).apply {
+                                timeZone = java.util.TimeZone.getTimeZone("UTC")
+                            }.format(java.util.Date(it))
+                        } ?: "Select date"
+                    )
+                }
+
+                if (selectedDate != null) {
+                    TextButton(
+                        onClick = { selectedDate = null }
+                    ) {
+                        Text("Clear date")
+                    }
+                }
+
+                if (showDatePicker) {
+                    val datePickerState = rememberDatePickerState(
+                        initialSelectedDateMillis = selectedDate
+                    )
+
+                    DatePickerDialog(
+                        onDismissRequest = { showDatePicker = false },
+                        confirmButton = {
+                            TextButton(
+                                onClick = {
+                                    selectedDate = datePickerState.selectedDateMillis
+                                    showDatePicker = false
+                                }
+                            ) {
+                                Text("OK")
+                            }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { showDatePicker = false }) {
+                                Text("Cancel")
+                            }
+                        }
+
+
+                    ) {
+                        DatePicker(state = datePickerState)
+                    }
+                }
+
+                Button(
+                    onClick = {
+                        message = ""
+                        camper.searchCampsites({ campsites = it }, { message = it })
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(48.dp)
+                ) {
+                    Text("Search campsite")
+                }
+
+                if (message.isNotEmpty()) {
+                    Text(
+                        text = message,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
                 }
             }
+        }
 
 
         campsites?.let { list ->
@@ -203,19 +278,63 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
                 date = selectedDate
             )
 
+            Text(
+                text = "Campsites",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary
+            )
+
             if (filteredCampsites.isEmpty()) {
-                Text("No campsites match your filters")
+                Text(
+                    text = "No campsites match your filters",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onBackground
+                )
             }
 
             filteredCampsites.forEach { campsite ->
-                Button(onClick = {
-                    onSelectCampsite(campsite)
-                    navController.navigate("campsite")
-                }) {
-                    Text("${campsite.getName()} - ${campsite.getLocation()}")
-                }
+                Card(
+                    onClick = {
+                        onSelectCampsite(campsite)
+                        navController.navigate("campsite")
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface
+                    )
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Column(
+                            modifier = Modifier.weight(1f),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            Text(
+                                text = campsite.getName(),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
 
-                Spacer(modifier = Modifier.height(16.dp))
+                            Text(
+                                text = campsite.getLocation(),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+
+                        Text(
+                            text = "›",
+                            style = MaterialTheme.typography.headlineMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
             }
         }
 
