@@ -8,9 +8,37 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
-class Camper: User {
-
+class Camper(
+    var id:String = "",
+    private var name:String = "",
+    private var email:String = "",
+    private var phone:String = ""
+): User {
     override val role = "camper"
+
+    fun setName(newName: String) {
+        name = newName
+    }
+
+    fun setEmail(newEmail: String) {
+        email = newEmail
+    }
+
+    fun setPhone(newPhone:String) {
+        phone = newPhone
+    }
+
+    fun getName(): String {
+        return name
+    }
+
+    fun getEmail(): String {
+        return email
+    }
+
+    fun getPhone(): String {
+        return phone
+    }
 
     /**
      * @param boolean is the state of the user's optnotification setting.
@@ -37,10 +65,80 @@ class Camper: User {
      */
     override fun saveUser() {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        id = uid
+
         FirebaseFirestore.getInstance().collection("users").document(uid)
             .set(mapOf("role" to role), SetOptions.merge())
             .addOnFailureListener { Log.e("User", "saveUser failed", it) }
     }
+
+    /**
+     * Saves the camper's personal information to Firestore without
+     * modifying their existing account data or preferences.
+     *
+     * @param onResult Callback that receives a success message if the
+     * information is saved successfully, or an error message if the
+     * operation fails.
+     */
+    fun savePersonalInfo(onResult: (String) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (uid == null) {
+            onResult("Error: User not authenticated")
+            return
+        }
+
+        FirebaseFirestore.getInstance().collection("users").document(uid)
+            .set(
+                mapOf(
+                    "name" to name,
+                    "email" to email,
+                    "phone" to phone
+                ),
+                SetOptions.merge()
+            )
+            .addOnSuccessListener {
+                onResult("Personal information saved")
+            }
+            .addOnFailureListener {
+                onResult("Error: ${it.message}")
+            }
+    }
+
+    /**
+     * Retrieves the camper's saved personal information from Firestore
+     * and updates the corresponding attributes of the camper object.
+     *
+     * @param onResult Callback that receives a success message or an
+     * error message if the information could not be retrieved.
+     */
+    fun loadPersonalInfo(onResult: (String) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (uid == null) {
+            onResult("Error: User not authenticated")
+            return
+        }
+
+        FirebaseFirestore.getInstance().collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    name = document.getString("name") ?: ""
+                    email = document.getString("email") ?: ""
+                    phone = document.getString("phone") ?: ""
+
+                    onResult("Personal information loaded")
+                } else {
+                    onResult("Error: Profile not found")
+                }
+            }
+            .addOnFailureListener {
+                onResult("Error: ${it.message}")
+            }
+    }
+
+
     /**
     deletes current users profile from firebase.
     prints error message if delete fails

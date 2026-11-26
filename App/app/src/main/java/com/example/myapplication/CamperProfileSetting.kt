@@ -28,6 +28,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.runtime.LaunchedEffect
 
 
 /*
@@ -50,6 +52,30 @@ fun CamperProfileSetting(
 ) {
     var message by remember { mutableStateOf("") }
     var notificationsOn by remember { mutableStateOf(false) }
+    var name by remember { mutableStateOf("") }
+    var email by remember { mutableStateOf("") }
+    var phone by remember { mutableStateOf("") }
+
+    var personalInfoMessage by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(true) }
+    var isSaving by remember { mutableStateOf(false) }
+    var personalInfoLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(camper) {
+        camper.loadPersonalInfo { result ->
+            if (result.startsWith("Error:")) {
+                personalInfoMessage = result
+                personalInfoLoaded = false
+            } else {
+                name = camper.getName()
+                email = camper.getEmail()
+                phone = camper.getPhone()
+                personalInfoLoaded = true
+            }
+
+            isLoading = false
+        }
+    }
 
     Column(
         modifier = modifier
@@ -74,6 +100,89 @@ fun CamperProfileSetting(
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier.padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Personal information",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = personalInfoLoaded && !isSaving
+                )
+
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it },
+                    label = { Text("Email") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = personalInfoLoaded && !isSaving
+                )
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("Phone number") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    enabled = personalInfoLoaded && !isSaving
+                )
+
+                Button(
+                    onClick = {
+                        isSaving = true
+                        personalInfoMessage = ""
+
+                        camper.setName(name.trim())
+                        camper.setEmail(email.trim())
+                        camper.setPhone(phone.trim())
+
+                        camper.savePersonalInfo { result ->
+                            personalInfoMessage = result
+                            isSaving = false
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                    enabled = personalInfoLoaded && !isSaving
+                ) {
+                    Text(if (isSaving) "Saving..." else "Save changes")
+                }
+
+                if (isLoading) {
+                    Text("Loading personal information...")
+                }
+
+                if (personalInfoMessage.isNotEmpty()) {
+                    Text(
+                        text = personalInfoMessage,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (personalInfoMessage.startsWith("Error:")) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        }
+                    )
+                }
+            }
+        }
+
 
         Card(
             modifier = Modifier.fillMaxWidth(),
