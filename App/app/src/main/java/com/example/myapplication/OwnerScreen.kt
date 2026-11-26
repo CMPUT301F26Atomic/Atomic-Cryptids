@@ -214,9 +214,9 @@ fun OwnerScreen(navController: NavController, owner: CampsiteOwner, onSelectCamp
 
             val campsite = owner.createCampsite(
                 name,
+                validCapacity,
                 description,
                 location,
-                validCapacity,
                 rules,
                 start,
                 end + 86_400_000L

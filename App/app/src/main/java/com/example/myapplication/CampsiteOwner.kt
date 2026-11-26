@@ -13,7 +13,7 @@ Campsite Owner overrides interface methods, allowing for saving and deleting pro
 todo optNotification method is not connected to firebase yet
 
  */
-class CampsiteOwner : User {
+open class CampsiteOwner : User {
     override val role= "campsite owner"
     override fun optNotification (boolean: Boolean): String {
         if (boolean) {
@@ -37,11 +37,11 @@ class CampsiteOwner : User {
      * @param availableEndDate Exclusive end date in UTC milliseconds.
      * @return The newly created Campsite object.
      */
-    fun createCampsite(
+    open fun createCampsite(
         name: String,
+        capacity: Int,
         description: String,
         location: String,
-        capacity: Int,
         rules: String,
         availableStartDate: Long,
         availableEndDate: Long
@@ -49,8 +49,8 @@ class CampsiteOwner : User {
         val uid = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
         return Campsite(
-            capacity = capacity,
             name = name,
+            capacity = capacity,
             owner = uid,
             description = description,
             location = location,
@@ -64,7 +64,7 @@ class CampsiteOwner : User {
     fun addPhoto (){
         //todo: when function is called and picture is given an image will be added to the campsite (linked via location possibly)
     }
-    fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
+    open fun postCampsite(campsite: Campsite, onResult: (String) -> Unit) {
         FirebaseFirestore.getInstance().collection("campsites").add(campsite.campsiteToMap)
             .addOnSuccessListener { documentReference ->
                 campsite.id = documentReference.id
@@ -81,7 +81,7 @@ class CampsiteOwner : User {
      * @param onResult Callback receiving the owner's campsites.
      * @param onError Callback receiving an error message if retrieval fails.
      */
-    fun getOwnedCampsites(
+    open fun getOwnedCampsites(
         onResult: (List<Campsite>) -> Unit,
         onError: (String) -> Unit
     ) {
@@ -130,7 +130,7 @@ class CampsiteOwner : User {
      * @param updatedFields Map containing the campsite fields to update.
      * @param onResult Callback receiving the result of the operation.
      */
-    fun updateCampsite(
+    open fun updateCampsite(
         campsiteId: String,
         updatedFields: Map<String, Any>,
         onResult: (String) -> Unit
@@ -186,7 +186,7 @@ class CampsiteOwner : User {
             .addOnFailureListener { Log.e("Lottery", "Failed", it) }
     }
 
-    fun getWaitlist(campsite: Campsite, onResult: (List<String>) -> Unit, onError: (String) -> Unit) {
+    open fun getWaitlist(campsite: Campsite, onResult: (List<String>) -> Unit, onError: (String) -> Unit) {
 
         // This block of code was written with help from Claude, prompted with:
         // "How do I find a Firestore document that has a certain value in one of its lists"

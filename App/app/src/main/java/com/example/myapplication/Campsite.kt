@@ -21,9 +21,9 @@ associate with owner
 /**
  * Represents a campsite with all its attributes
  * list of participants keep track of how many people are booked
+ * data class to allow for equality comparison by attribute values for testing
  */
-
-class Campsite(
+data class Campsite(
     var id: String = "",
     private val name: String,
     private val capacity: Int,
@@ -35,8 +35,6 @@ class Campsite(
     private val availableStartDate: Long? = null,
     private val availableEndDate: Long? = null,
 ) {
-    private val participants = mutableStateListOf<String>()
-
     val campsiteToMap: Map<String, Any?>
         get() = buildMap {
             put("capacity", capacity)
@@ -45,7 +43,7 @@ class Campsite(
             put("description", description)
             put("location", location)
             put("rules", rules)
-            put("occupancy", participants.size)
+            put("occupancy", occupancy)
 
             availableStartDate?.let {
                 put("availableStartDate", it)
@@ -55,90 +53,78 @@ class Campsite(
                 put("availableEndDate", it)
             }
         }
-            /**
-             * Checks whether the campsite is available on a specified date.
-             *
-             * The start date is inclusive and the end date is exclusive.
-             * Returns false if the campsite has no availability dates specified.
-             *
-             * @param date The date to check, in milliseconds.
-             * @return True if the date is within the campsite's availability,
-             */
-            fun isAvailableOn(date: Long): Boolean {
-                val start = availableStartDate ?: return false
-                val end = availableEndDate ?: return false
+    /**
+     * Checks whether the campsite is available on a specified date.
+     *
+     * The start date is inclusive and the end date is exclusive.
+     * Returns false if the campsite has no availability dates specified.
+     *
+     * @param date The date to check, in milliseconds.
+     * @return True if the date is within the campsite's availability,
+     */
+    fun isAvailableOn(date: Long): Boolean {
+        val start = availableStartDate ?: return false
+        val end = availableEndDate ?: return false
 
-                return date >= start && date < end
-            }
+        return date >= start && date < end
+    }
 
-            fun generateQRCode(): String {
-                return "QR Code"
-            }
+    fun generateQRCode(): String {
+        return "QR Code"
+    }
 
-            fun addParticipant(name: String) {
-                if (participants.size < capacity) {
-                    participants.add(name)
-                }
-            }
+    fun getName(): String {
+        return name
+    }
 
-            fun getCapacity(): Int {
-                return capacity
-            }
+    fun getCapacity(): Int {
+        return capacity
+    }
 
-            fun getName(): String {
-                return name
-            }
+    fun getOwner(): String {
+        return owner
+    }
 
-            fun getOwner(): String {
-                return owner
-            }
+    fun getDescription(): String {
+        return description
+    }
 
-            fun getDescription(): String {
-                return description
-            }
+    fun getLocation(): String {
+        return location
+    }
 
-            fun getLocation(): String {
-                return location
-            }
+    fun getRules(): String {
+        return rules
+    }
 
-            fun getRules(): String {
-                return rules
-            }
+    fun getAvailableStartDate(): Long? {
+        return availableStartDate
+    }
 
-            fun getAvailableStartDate(): Long? {
-                return availableStartDate
-            }
+    fun getAvailableEndDate(): Long? {
+        return availableEndDate
+    }
 
-            fun getAvailableEndDate(): Long? {
-                return availableEndDate
-            }
+    fun getOccupancy(): Int {
+        return occupancy
+    }
 
-            fun getOccupancy(): Int {
-                return participants.size
-            }
-
-            fun save(onResult: (String) -> Unit) {
-                FirebaseFirestore.getInstance().collection("campsites").add(campsiteToMap)
-                    .addOnSuccessListener { onResult("Saved") }
-                    .addOnFailureListener { onResult("Error: ${it.message}") }
-            }
-
-            companion object {
-                fun fromDoc(doc: DocumentSnapshot): Campsite? {
-                    val name = doc.getString("name")?.trim() ?: return null
-                    if (name.isBlank()) return null
-                    return Campsite(
-                        id = doc.id,
-                        name = name,
-                        capacity = doc.getLong("capacity")?.toInt() ?: 0,
-                        owner = doc.getString("owner") ?: "",
-                        occupancy = doc.getLong("occupancy")?.toInt() ?: 0,
-                        description = doc.getString("description") ?: "",
-                        location = doc.getString("location") ?: "",
-                        rules = doc.getString("rules") ?: "",
-                        availableStartDate = doc.getLong("availableStartDate"),
-                        availableEndDate = doc.getLong("availableEndDate"),
-                    )
-                }
-            }
+    companion object {
+        fun fromDoc(doc: DocumentSnapshot): Campsite? {
+            val name = doc.getString("name")?.trim() ?: return null
+            if (name.isBlank()) return null
+            return Campsite(
+                id = doc.id,
+                name = name,
+                capacity = doc.getLong("capacity")?.toInt() ?: 0,
+                owner = doc.getString("owner") ?: "",
+                occupancy = doc.getLong("occupancy")?.toInt() ?: 0,
+                description = doc.getString("description") ?: "",
+                location = doc.getString("location") ?: "",
+                rules = doc.getString("rules") ?: "",
+                availableStartDate = doc.getLong("availableStartDate"),
+                availableEndDate = doc.getLong("availableEndDate"),
+            )
         }
+    }
+}
