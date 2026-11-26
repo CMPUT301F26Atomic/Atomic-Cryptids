@@ -209,4 +209,14 @@ class CampsiteOwner : User {
                 onError("Could not find lottery: " + error.message)
             }
     }
+
+    /**
+     * adds a message to message collection in database identified by the id of the receiver
+     *
+     * @param camper the object for the camper which is the receiver of the message
+     * @param message the string of the message
+     */
+    fun sendMessage(camper: Camper, message: String, ) {
+        FirebaseFirestore.getInstance().collection("messages").add(mapOf("camper" to camper.id, "message" to message))
+    }
 }
