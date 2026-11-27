@@ -375,13 +375,13 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
                                 enabled = !isSubmittingReview
                             ) {
                                 Icon(
-                                    imageVector = if (isFilled) {
-                                        Icons.Filled.Star
-                                    } else {
-                                        Icons.Outlined.Star
-                                    },
+                                    imageVector = Icons.Filled.Star,
                                     contentDescription = "Rating ${i + 1}",
-                                    tint = MaterialTheme.colorScheme.primary
+                                    tint = if (isFilled) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                    }
                                 )
                             }
                         }
