@@ -357,11 +357,42 @@ class Camper(
             }
     }
 
-    fun submitReview(campsite: Campsite, rating: Int, reviewText: String) {
+    /**
+     * Submits a camper's rating and written review for a campsite
+     * to Firestore.
+     *
+     * @param campsite The campsite being reviewed.
+     * @param rating The selected rating between 1 and 5.
+     * @param reviewText The written review of the campsite.
+     * @param onResult Callback that receives a success or error message.
+     */
+    fun submitReview(
+        campsite: Campsite,
+        rating: Int,
+        reviewText: String,
+        onResult: (String) -> Unit
+    ) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (rating !in 1..5) {
+            onResult("Error: Invalid rating")
+            return
+        }
 
-        val review = mapOf("user_id" to uid, "campsite_id" to campsite.id, "rating" to rating, "text" to reviewText)
+        val review = mapOf(
+            "user_id" to uid,
+            "campsite_id" to campsite.id,
+            "rating" to rating,
+            "text" to reviewText.trim()
+        )
 
-        FirebaseFirestore.getInstance().collection("reviews").add(review)
+        FirebaseFirestore.getInstance()
+            .collection("reviews")
+            .add(review)
+            .addOnSuccessListener {
+                onResult("Review submitted successfully")
+            }
+            .addOnFailureListener {
+                onResult("Error: ${it.message}")
+            }
     }
 }
