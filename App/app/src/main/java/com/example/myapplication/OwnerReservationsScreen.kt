@@ -3,6 +3,7 @@ package com.example.myapplication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -11,10 +12,12 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +36,8 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 //US 02.07.01 View list of active reservations as campsite owner
+//US 02.07.02 View list of past reservations as campsite owner
+//US 02.07.03 View list of cancelled reservations as campsite owner
 
 @Composable
 fun OwnerReservationsScreen(navController: NavController) {
@@ -40,6 +45,7 @@ fun OwnerReservationsScreen(navController: NavController) {
     var items by remember { mutableStateOf<List<Pair<Campsite, List<Reservation>>>>(emptyList()) }
     var loaded by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
+    var filter by remember { mutableStateOf("Active") }
 
     LaunchedEffect(Unit) {
         FirebaseFirestore.getInstance().collection("campsites")
@@ -55,7 +61,7 @@ fun OwnerReservationsScreen(navController: NavController) {
                 val results = mutableListOf<Pair<Campsite, List<Reservation>>>()
                 var remaining = campsites.size
                 campsites.forEach { campsite ->
-                    Reservation.fetchActiveForCampsite(
+                    Reservation.fetchAllForCampsite(
                         campsite.id,
                         { reservations ->
                             results.add(campsite to reservations)
@@ -100,10 +106,27 @@ fun OwnerReservationsScreen(navController: NavController) {
         )
 
         Text(
-            text = "View active reservations across your campsites.",
+            text = "View reservations across your campsites.",
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onBackground
         )
+
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(12.dp)
+        ) {
+            listOf("Active", "Past", "Cancelled").forEach { tab ->
+                if (filter == tab) {
+                    Button(onClick = { filter = tab }, modifier = Modifier.weight(1f)) {
+                        Text(tab)
+                    }
+                } else {
+                    OutlinedButton(onClick = { filter = tab }, modifier = Modifier.weight(1f)) {
+                        Text(tab)
+                    }
+                }
+            }
+        }
 
         if (loaded && items.isEmpty()) {
             Card(
@@ -128,7 +151,15 @@ fun OwnerReservationsScreen(navController: NavController) {
             }
         }
 
+        val now = System.currentTimeMillis()
         items.forEach { (campsite, reservations) ->
+            val shown = reservations.filter {
+                when (filter) {
+                    "Past" -> it.endDateMillis <= now && it.status != Reservation.Status.CANCELLED
+                    "Cancelled" -> it.status == Reservation.Status.CANCELLED
+                    else -> it.status == Reservation.Status.ACTIVE && it.endDateMillis > now
+                }
+            }
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(16.dp),
@@ -150,14 +181,14 @@ fun OwnerReservationsScreen(navController: NavController) {
 
                     HorizontalDivider()
 
-                    if (reservations.isEmpty()) {
+                    if (shown.isEmpty()) {
                         Text(
-                            text = "No active reservations.",
+                            text = "No ${filter.lowercase()} reservations.",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
 
-                    reservations.forEach {
+                    shown.forEach {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(8.dp),
@@ -178,7 +209,9 @@ fun OwnerReservationsScreen(navController: NavController) {
                                 )
 
                                 Text(
-                                    text = "Camper: ${it.userId.take(8)}",
+                                    text = if (it.status == Reservation.Status.CANCELLED)
+                                        "Cancelled by camper: ${it.userId.take(8)}"
+                                    else "Camper: ${it.userId.take(8)}",
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
