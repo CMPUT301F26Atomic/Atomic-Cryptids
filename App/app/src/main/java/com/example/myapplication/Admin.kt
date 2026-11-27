@@ -9,7 +9,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 /*
 Admin is an instance of interface User. Will be completed in the second sprint
  */
-class Admin : User {
+class Admin(
+    override val uid: String,
+    override val username: String
+) : User {
     override val role = "admin"
 
     /**
@@ -33,10 +36,11 @@ class Admin : User {
                 val campers =
                     result.documents.map { doc ->
                         Camper(
-                            doc.id,
-                            doc.getString("name") ?: "",
-                            doc.getString("email") ?: "",
-                            doc.getString("phone") ?: "",
+                            uid = doc.id,
+                            username = doc.getString("username") ?: "",
+                            name = doc.getString("name") ?: "",
+                            email = doc.getString("email") ?: "",
+                            phone = doc.getString("phone") ?: "",
                         )
                     }
                 onResult(campers)

@@ -297,7 +297,7 @@ fun AppPolicyLink() {
 @Composable
 fun CamperProfileSettingPreview() {
     CamperProfileSetting(
-        camper = Camper(),
+        camper = Camper(uid = "preview", username = "PreviewCamper"),
         onBack = {},
         onDeleted = {}
     )

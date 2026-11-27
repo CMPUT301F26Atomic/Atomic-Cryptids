@@ -1,105 +1,84 @@
 package com.example.myapplication
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
 
 @Composable
-fun LoginScreen(navController: NavController, onSelectCamper: () -> Unit, onSelectOwner: () -> Unit, onSelectAdmin: () -> Unit) {
-
+fun LoginScreen(state: AccountState, accounts: AccountController) {
+    var creating by rememberSaveable { mutableStateOf(false) }
+    var username by rememberSaveable { mutableStateOf("") }
+    var role by rememberSaveable { mutableStateOf("camper") }
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .padding(24.dp),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
+        Modifier.fillMaxSize()
+            .safeDrawingPadding().
+            imePadding()
+            .verticalScroll
+                (rememberScrollState()).padding(24.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-
         Text(
-            text = "Atomic Cryptids",
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary,
-            textAlign = TextAlign.Center
+            if (creating) "Create account"
+            else "Log in",
+            style = MaterialTheme.typography.headlineMedium)
+        Text("Your account is linked to this app's Firebase UID.")
+        OutlinedTextField(
+            value = username,
+            onValueChange = {
+                username = it;
+                accounts.clearError() },
+
+            label = { Text("Username") }, singleLine = true,
+            enabled = !state.busy, modifier = Modifier.fillMaxWidth()
         )
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Text(
-            text = "Campsite Management Application",
-            style = MaterialTheme.typography.bodyLarge,
-            color = MaterialTheme.colorScheme.onBackground,
-            textAlign = TextAlign.Center
-        )
-
-        Spacer(modifier = Modifier.height(40.dp))
-
-        Text(
-            text = "Select your role",
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                onSelectCamper()
-                navController.navigate("home")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .testTag("camperLoginButton")
-        ) {
-            Text("Camper")
+        if (creating) {
+            Text("Choose your role")
+            AccountPolicy.roles.forEach {
+                option ->
+                Row {
+                    RadioButton(
+                        selected = role == option,
+                        onClick = { role = option; accounts.clearError() },
+                        enabled = !state.busy)
+                    TextButton(
+                        onClick = {
+                            role = option;
+                            accounts.clearError() },
+                        enabled = !state.busy) {
+                        Text(
+                            when (option) {
+                            "camper" -> "Camper"
+                            "admin" -> "Admin"
+                            else -> "Campsite owner"
+                        })
+                    }
+                }
+            }
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        Button(
-            onClick = {
-                onSelectOwner()
-                navController.navigate("home")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .testTag("ownerLoginButton")
-        ) {
-            Text("Campsite owner")
+        state.error?.let {
+            Text(it, color = MaterialTheme.colorScheme.error)
         }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
+        if (state.busy) CircularProgressIndicator()
         Button(
+            enabled = !state.busy && username.isNotBlank(),
             onClick = {
-                onSelectAdmin()
-                navController.navigate("home")
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(52.dp)
-                .testTag("adminLoginButton")
-        ) {
-            Text("Admin")
-        }
-
+                if (creating) accounts.register(username, role)
+                else accounts.login(username)
+            }, modifier = Modifier.fillMaxWidth()
+        ) { Text(if (creating) "Create account"
+        else "Log in") }
+        TextButton(enabled = !state.busy, onClick = {
+            creating = !creating
+            accounts.clearError()
+        }) {
+            Text(if (creating)
+                "Already registered? Log in"
+            else
+                "Create a new account") }
     }
-
 }

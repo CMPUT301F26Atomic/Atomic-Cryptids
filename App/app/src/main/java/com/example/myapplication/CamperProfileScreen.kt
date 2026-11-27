@@ -68,6 +68,8 @@ fun CamperProfileScreen(
                     color = MaterialTheme.colorScheme.primary
                 )
 
+                Text(text = "Username: ${camper.username}")
+
                 Text(
                     text = "Name",
                     style = MaterialTheme.typography.labelLarge

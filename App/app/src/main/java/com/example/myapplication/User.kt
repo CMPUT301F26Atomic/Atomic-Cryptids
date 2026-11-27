@@ -7,14 +7,11 @@ import com.google.firebase.firestore.SetOptions
 import com.google.firebase.firestore.FieldValue
 
 interface User {
+    val uid: String
+    val username: String
     val role: String
 
-    fun saveUser() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(mapOf("role" to role), SetOptions.merge())
-            .addOnFailureListener { Log.e("User", "saveUser failed", it) }
-    }
+
 
     /**
      * Retrieves all campsites from Firestore.
@@ -56,7 +53,7 @@ interface User {
          */
     }
     fun deleteProfile() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+        if (FirebaseAuth.getInstance().currentUser?.uid != uid) return
         FirebaseFirestore.getInstance().collection("users").document(uid)
             .delete()
             .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }

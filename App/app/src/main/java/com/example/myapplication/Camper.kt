@@ -9,12 +9,14 @@ import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
 class Camper(
-    var id:String = "",
+    override val uid: String,
+    override val username: String,
     private var name:String = "",
     private var email:String = "",
     private var phone:String = ""
 ): User {
     override val role = "camper"
+    val id: String get() = uid
 
     fun setName(newName: String) {
         name = newName
@@ -58,20 +60,6 @@ class Camper(
             return "no notifications"
         }
     }
-    /**
-    saves current users attributes to firebase under collection users.
-    It records the role of the user.
-    prints error message if save fails
-     */
-    override fun saveUser() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        id = uid
-
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .set(mapOf("role" to role), SetOptions.merge())
-            .addOnFailureListener { Log.e("User", "saveUser failed", it) }
-    }
-
     /**
      * Saves the camper's personal information to Firestore without
      * modifying their existing account data or preferences.
@@ -136,19 +124,6 @@ class Camper(
             .addOnFailureListener {
                 onResult("Error: ${it.message}")
             }
-    }
-
-
-    /**
-    deletes current users profile from firebase.
-    prints error message if delete fails
-    possible source of error: if camper and owner have same name
-     */
-    override fun deleteProfile() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
-        FirebaseFirestore.getInstance().collection("users").document(uid)
-            .delete()
-            .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
     }
 
 

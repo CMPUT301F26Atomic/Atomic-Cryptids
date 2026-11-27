@@ -3,25 +3,17 @@ package com.example.myapplication
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.navigation.NavController
+import androidx.navigation.NavHostController
 import com.atomiccryptids.campsiteapp.User
 import com.google.firebase.auth.FirebaseAuth
 
 @Composable
-fun HomeScreen(user: User?, navController: NavController) {
-    LaunchedEffect(Unit) {
-        val auth = FirebaseAuth.getInstance()
-        if (auth.currentUser == null) {
-            auth.signInAnonymously()
+
+fun HomeScreen(user: User?, navController: NavHostController) {
+    LaunchedEffect(user?.role) {
+        navController.navigate(user?.role?.let(AccountPolicy::route) ?: "login") {
+            popUpTo("home") { inclusive = true }
+            launchSingleTop = true
         }
-    }
-
-    //BackHandler(enabled = user != null) { user = null }
-
-    when (user) {
-        null -> navController.navigate("login") { launchSingleTop = true }
-        is Camper -> navController.navigate("camper") { launchSingleTop = true }
-        is CampsiteOwner -> navController.navigate("owner") { launchSingleTop = true }
-        is Admin -> navController.navigate("admin") { launchSingleTop = true }
-        else -> {}
     }
 }
