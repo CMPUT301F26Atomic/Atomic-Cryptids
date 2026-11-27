@@ -8,9 +8,39 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.SetOptions
 
-class Camper (override val uid: String,override val username: String): User {
-
+class Camper(
+    override val uid: String,
+    override val username: String,
+    private var name:String = "",
+    private var email:String = "",
+    private var phone:String = ""
+): User {
     override val role = "camper"
+    val id: String get() = uid
+
+    fun setName(newName: String) {
+        name = newName
+    }
+
+    fun setEmail(newEmail: String) {
+        email = newEmail
+    }
+
+    fun setPhone(newPhone:String) {
+        phone = newPhone
+    }
+
+    fun getName(): String {
+        return name
+    }
+
+    fun getEmail(): String {
+        return email
+    }
+
+    fun getPhone(): String {
+        return phone
+    }
 
     /**
      * @param boolean is the state of the user's optnotification setting.
@@ -31,15 +61,69 @@ class Camper (override val uid: String,override val username: String): User {
         }
     }
     /**
-    deletes current users profile from firebase.
-    prints error message if delete fails
-    possible source of error: if camper and owner have same name
+     * Saves the camper's personal information to Firestore without
+     * modifying their existing account data or preferences.
+     *
+     * @param onResult Callback that receives a success message if the
+     * information is saved successfully, or an error message if the
+     * operation fails.
      */
-    override fun deleteProfile() {
-        val uid = FirebaseAuth.getInstance().currentUser?.uid ?: return
+    fun savePersonalInfo(onResult: (String) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (uid == null) {
+            onResult("Error: User not authenticated")
+            return
+        }
+
         FirebaseFirestore.getInstance().collection("users").document(uid)
-            .delete()
-            .addOnFailureListener { Log.e("User", "deleteProfile failed", it) }
+            .set(
+                mapOf(
+                    "name" to name,
+                    "email" to email,
+                    "phone" to phone
+                ),
+                SetOptions.merge()
+            )
+            .addOnSuccessListener {
+                onResult("Personal information saved")
+            }
+            .addOnFailureListener {
+                onResult("Error: ${it.message}")
+            }
+    }
+
+    /**
+     * Retrieves the camper's saved personal information from Firestore
+     * and updates the corresponding attributes of the camper object.
+     *
+     * @param onResult Callback that receives a success message or an
+     * error message if the information could not be retrieved.
+     */
+    fun loadPersonalInfo(onResult: (String) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+
+        if (uid == null) {
+            onResult("Error: User not authenticated")
+            return
+        }
+
+        FirebaseFirestore.getInstance().collection("users").document(uid)
+            .get()
+            .addOnSuccessListener { document ->
+                if (document.exists()) {
+                    name = document.getString("name") ?: ""
+                    email = document.getString("email") ?: ""
+                    phone = document.getString("phone") ?: ""
+
+                    onResult("Personal information loaded")
+                } else {
+                    onResult("Error: Profile not found")
+                }
+            }
+            .addOnFailureListener {
+                onResult("Error: ${it.message}")
+            }
     }
 
 
@@ -245,6 +329,45 @@ class Camper (override val uid: String,override val username: String): User {
             }
             .addOnFailureListener { error ->
                 onResult("Could not find lottery: " + error.message)
+            }
+    }
+
+    /**
+     * Submits a camper's rating and written review for a campsite
+     * to Firestore.
+     *
+     * @param campsite The campsite being reviewed.
+     * @param rating The selected rating between 1 and 5.
+     * @param reviewText The written review of the campsite.
+     * @param onResult Callback that receives a success or error message.
+     */
+    fun submitReview(
+        campsite: Campsite,
+        rating: Int,
+        reviewText: String,
+        onResult: (String) -> Unit
+    ) {
+        val uid = FirebaseAuth.getInstance().currentUser?.uid
+        if (rating !in 1..5) {
+            onResult("Error: Invalid rating")
+            return
+        }
+
+        val review = mapOf(
+            "user_id" to uid,
+            "campsite_id" to campsite.id,
+            "rating" to rating,
+            "text" to reviewText.trim()
+        )
+
+        FirebaseFirestore.getInstance()
+            .collection("reviews")
+            .add(review)
+            .addOnSuccessListener {
+                onResult("Review submitted successfully")
+            }
+            .addOnFailureListener {
+                onResult("Error: ${it.message}")
             }
     }
 }

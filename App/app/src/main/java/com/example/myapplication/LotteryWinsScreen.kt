@@ -50,6 +50,10 @@ fun LotteryWinsScreen(navController: NavController, onSelectCampsite: (Campsite)
     var refresh by remember { mutableIntStateOf(0) }
     val db = FirebaseFirestore.getInstance()
 
+    LaunchedEffect(Unit) {
+        LotteryDraw.runDraws { refresh++ }
+    }
+
     LaunchedEffect(refresh) {
         db.collection("lotteries")
             .whereArrayContains("winners", uid)

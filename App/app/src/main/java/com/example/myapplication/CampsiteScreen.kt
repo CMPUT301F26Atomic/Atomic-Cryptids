@@ -4,6 +4,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -21,6 +29,10 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Star
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,10 +45,14 @@ import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableIntStateOf
 import com.google.firebase.firestore.FirebaseFirestore
 
 /**
  * Screen that displays campsite details
+ *
+ * Resources:
+ * For star rating: https://dev.to/myougatheaxo/star-rating-ui-in-compose-custom-rating-bar-implementation-2hjm
  *
  * @param navController controller used for navigating between screens
  * @param campsite campsite object which the details are for
@@ -45,6 +61,10 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User) {
     var message by remember { mutableStateOf("") }
+    var review by remember(campsite.id) { mutableStateOf("") }
+    var rating by remember(campsite.id) { mutableIntStateOf(1) }
+    var reviewMessage by remember(campsite.id) { mutableStateOf("") }
+    var isSubmittingReview by remember(campsite.id) { mutableStateOf(false) }
     var lotteryLoaded by remember(campsite.id) { mutableStateOf(false) }
 
     var lotteryDetails by remember {
@@ -316,6 +336,115 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onBackground
             )
+        }
+
+        if (user is Camper) {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface
+                )
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    Text(
+                        text = "Leave a review",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+
+                    Text(
+                        text = "Rate your experience at this campsite.",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center
+                    ) {
+                        repeat(5) { i ->
+                            val isFilled = rating > i
+
+                            IconButton(
+                                onClick = { rating = i + 1 },
+                                enabled = !isSubmittingReview
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Star,
+                                    contentDescription = "Rating ${i + 1}",
+                                    tint = if (isFilled) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.3f)
+                                    }
+                                )
+                            }
+                        }
+                    }
+
+                    Text(
+                        text = "Rating: $rating / 5",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+
+                    OutlinedTextField(
+                        value = review,
+                        onValueChange = { review = it },
+                        label = { Text("Add review") },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 3,
+                        enabled = !isSubmittingReview
+                    )
+
+                    Button(
+                        onClick = {
+                            isSubmittingReview = true
+                            reviewMessage = ""
+
+                            user.submitReview(
+                                campsite,
+                                rating,
+                                review
+                            ) { result ->
+                                reviewMessage = result
+                                isSubmittingReview = false
+
+                                if (!result.startsWith("Error:")) {
+                                    review = ""
+                                    rating = 1
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = !isSubmittingReview
+                    ) {
+                        Text(
+                            if (isSubmittingReview) {
+                                "Submitting..."
+                            } else {
+                                "Submit review"
+                            }
+                        )
+                    }
+
+                    if (reviewMessage.isNotEmpty()) {
+                        Text(
+                            text = reviewMessage,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (reviewMessage.startsWith("Error:")) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.primary
+                            }
+                        )
+                    }
+                }
+            }
         }
     }
 }

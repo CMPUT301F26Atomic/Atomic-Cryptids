@@ -8,7 +8,6 @@ import androidx.activity.viewModels
 import com.atomiccryptids.campsiteapp.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
-
     private val session: AppSessionViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -16,8 +15,9 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         setContent {
+
             MyApplicationTheme {
-                CampsiteApp(session = session)
+                CampsiteApp(session)
             }
         }
     }

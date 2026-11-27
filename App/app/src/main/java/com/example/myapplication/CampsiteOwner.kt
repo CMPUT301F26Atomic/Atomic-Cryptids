@@ -13,8 +13,10 @@ Campsite Owner overrides interface methods, allowing for saving and deleting pro
 todo optNotification method is not connected to firebase yet
 
  */
-class CampsiteOwner(override val uid: String,override val username: String) :
-    User{
+class CampsiteOwner(
+    override val uid: String,
+    override val username: String
+) : User {
     override val role= "campsite owner"
     override fun optNotification (boolean: Boolean): String {
         if (boolean) {

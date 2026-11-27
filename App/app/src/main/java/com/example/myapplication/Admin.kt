@@ -1,55 +1,101 @@
 package com.example.myapplication
 
+import android.util.Log
+import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class Admin(override val uid: String,override val username: String) :
-    User {
-    override val role: String = "admin"
+/*
+Admin is an instance of interface User. Will be completed in the second sprint
+ */
+class Admin(
+    override val uid: String,
+    override val username: String
+) : User {
+    override val role = "admin"
 
+    /**
+     * Gets all camper profiles from Firestore
+     *
+     * Converts each camper user to a camper object
+     *
+     * @param onResult Callback that receives the list of retrieved campsites.
+     * @param onError Callback that receives an error message if retrieval fails.
+     */
     fun getCampers(
         onResult: (List<Camper>) -> Unit,
-        onError: (String) -> Unit
+        onError: (String) -> Unit,
     ) {
-        FirebaseFirestore.getInstance()
+        FirebaseFirestore
+            .getInstance()
             .collection("users")
             .whereEqualTo("role", "camper")
             .get()
             .addOnSuccessListener { result ->
-                val campers = try {
+                val campers =
                     result.documents.map { doc ->
-                        val savedUid = requireNotNull(
-                            doc.getString("uid")
-                        ) {
-                            "A camper profile is missing its UID."
-                        }
-
-                        val savedUsername = requireNotNull(
-                            doc.getString("username")
-                        ) {
-                            "A camper profile is missing its username."
-                        }
-
-                        require(savedUid == doc.id) {
-                            "A camper profile has an incorrect UID."
-                        }
-
                         Camper(
-                            uid = savedUid,
-                            username = savedUsername
+                            uid = doc.id,
+                            username = doc.getString("username") ?: "",
+                            name = doc.getString("name") ?: "",
+                            email = doc.getString("email") ?: "",
+                            phone = doc.getString("phone") ?: "",
                         )
                     }
-                } catch (error: IllegalArgumentException) {
-                    onError(
-                        error.message ?: "Could not read camper profiles."
-                    )
-                    return@addOnSuccessListener
-                }
-
                 onResult(campers)
+            }.addOnFailureListener {
+                onError("Error: ${it.message}")
+            }
+    }
+
+    /**
+     * Removes a camper profile from Firestore using their unique ID.
+     *
+     * @param camper The camper whose profile will be removed.
+     * @param onSuccess Callback invoked when deletion succeeds.
+     * @param onError Callback that receives an error message if deletion fails.
+     */
+    fun removeCamper(
+        camper: Camper,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        FirebaseFirestore.getInstance()
+            .collection("users")
+            .document(camper.id)
+            .delete()
+            .addOnSuccessListener {
+                onSuccess()
             }
             .addOnFailureListener {
-                onError(it.message ?: "Could not load campers.")
+                Log.e("Admin", "removeCamper failed", it)
+                onError("Error: ${it.message}")
+            }
+    }
+
+    /**
+     * Removes a campsite from Firestore using its unique ID.
+     *
+     * @param campsite The campsite to be removed.
+     * @param onSuccess Callback invoked when deletion succeeds.
+     * @param onError Callback that receives an error message if deletion fails.
+     */
+    fun removeCampsite(
+        campsite: Campsite,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) {
+        FirebaseFirestore.getInstance()
+            .collection("campsites")
+            .document(campsite.id)
+            .delete()
+            .addOnSuccessListener {
+                onSuccess()
+            }
+            .addOnFailureListener {
+                Log.e("Admin", "removeCampsite failed", it)
+                onError("Error: ${it.message}")
             }
     }
 }
