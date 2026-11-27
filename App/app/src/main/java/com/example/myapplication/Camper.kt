@@ -1,6 +1,7 @@
 package com.example.myapplication
 
 import android.util.Log
+import androidx.core.app.NotificationCompat
 import com.atomiccryptids.campsiteapp.Campsite
 import com.atomiccryptids.campsiteapp.User
 import com.google.firebase.auth.FirebaseAuth
@@ -357,11 +358,36 @@ class Camper(
             }
     }
 
+    /**
+     * Camper adds a review for a campsite
+     *
+     * @param campsite campsite to be reviewed
+     * @param rating five star rating scale
+     * @param reviewText Text content of review
+     */
     fun submitReview(campsite: Campsite, rating: Int, reviewText: String) {
         val uid = FirebaseAuth.getInstance().currentUser?.uid
 
         val review = mapOf("user_id" to uid, "campsite_id" to campsite.id, "rating" to rating, "text" to reviewText)
 
         FirebaseFirestore.getInstance().collection("reviews").add(review)
+    }
+
+    /**
+     * get the messages that were sent to the user from the database
+     *
+     * @param onResult get the result of the search in a list of message objects
+     */
+    fun getMessages(onResult: (List<Message>) -> Unit) {
+        val uid = FirebaseAuth.getInstance().currentUser
+
+        FirebaseFirestore.getInstance().collection("messages").whereEqualTo("camperId", uid)
+            .get()
+            .addOnSuccessListener { result ->
+                val message = result.documents.map { doc ->
+                    Message(doc.id, doc.getString("camperId") ?: "", doc.getString("message") ?: "")
+                }
+                onResult(message)
+            }
     }
 }
