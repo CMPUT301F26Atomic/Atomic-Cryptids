@@ -1,6 +1,10 @@
 package com.example.myapplication
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -54,131 +58,270 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
     }
 
     //UI
-    Column(modifier = Modifier.fillMaxSize().padding(16.dp).statusBarsPadding()) {
-        Text("Create / Edit Lottery", style = MaterialTheme.typography.headlineMedium)
-        Spacer(modifier =
-            Modifier.height(16.dp))
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(MaterialTheme.colorScheme.background)
+            .statusBarsPadding()
+            .navigationBarsPadding()
+            .verticalScroll(rememberScrollState())
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp)
+    ) {
+        TextButton(onClick = onBack) {
+            Text("Back")
+        }
 
-        // dropdown menu
-        Box {
-            Button(onClick = { expanded = true }) {
-                Text("Add Campsite to Lottery")
-            }
+        Text(
+            text = "Create / Edit Lottery",
+            style = MaterialTheme.typography.headlineLarge,
+            color = MaterialTheme.colorScheme.primary
+        )
 
-            DropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-                modifier = Modifier.heightIn(max = 280.dp)) {
-                allCampsites.forEach { campsite ->
-                    DropdownMenuItem(
-                        text = { Text(campsite.getName()) },
-                        onClick = {
-                            expanded = false
-                            isConfirming = false
-                            status = ""
-                            if (!selectedCampsites.any { it.id == campsite.id }) {
-                                selectedCampsites = selectedCampsites + campsite
+        Text(
+            text = "Configure and manage your campsite lotteries.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onBackground
+        )
 
-                                // check if editing
-                                db.collection("lotteries")
-                                    .whereArrayContains("campsiteIds", campsite.id).get()
-                                    .addOnSuccessListener { snap ->
-                                        if (!snap.isEmpty) {
-                                            val lot = snap.documents[0]
-                                            existingLotteryId = lot.id
-                                            drawCompleted = lot.getBoolean("drawCompleted") ?: false
-                                            winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
-                                            regStartDateMillis = lot.getLong("registrationStartDate")
-                                            regEndDateMillis = lot.getLong("registrationEndDate")
-                                            capacityInput = lot.getLong("capacity")?.toString() ?: ""
-                                            waitlistCapacityInput = lot.getLong("waitlistCapacity")?.toString() ?: ""
-                            
-                                            status = "Editing existing lottery"
-                                            val lotteryCampsiteIds = lot.get("campsiteIds") as? List<String> ?: emptyList()
-                                            val associatedCampsites = allCampsites.filter { it.id in lotteryCampsiteIds }
-                                            selectedCampsites = (selectedCampsites + associatedCampsites).distinctBy { it.id }
-                                        }
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Campsites",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                // dropdown menu
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    OutlinedButton(
+                        onClick = { expanded = true },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Add Campsite to Lottery")
+                            Text("▾")
+                        }
+                    }
+
+                    DropdownMenu(
+                        expanded = expanded,
+                        onDismissRequest = { expanded = false },
+                        modifier = Modifier.heightIn(max = 280.dp),
+                        containerColor = MaterialTheme.colorScheme.surface
+                    ) {
+                        allCampsites.forEach { campsite ->
+                            DropdownMenuItem(
+                                text = { Text(campsite.getName()) },
+                                onClick = {
+                                    expanded = false
+                                    isConfirming = false
+                                    status = ""
+                                    if (!selectedCampsites.any { it.id == campsite.id }) {
+                                        selectedCampsites = selectedCampsites + campsite
+
+                                        // check if editing
+                                        db.collection("lotteries")
+                                            .whereArrayContains("campsiteIds", campsite.id).get()
+                                            .addOnSuccessListener { snap ->
+                                                if (!snap.isEmpty) {
+                                                    val lot = snap.documents[0]
+                                                    existingLotteryId = lot.id
+                                                    drawCompleted = lot.getBoolean("drawCompleted") ?: false
+                                                    winnersInput = lot.getLong("numberOfWinners")?.toString() ?: ""
+                                                    regStartDateMillis = lot.getLong("registrationStartDate")
+                                                    regEndDateMillis = lot.getLong("registrationEndDate")
+                                                    capacityInput = lot.getLong("capacity")?.toString() ?: ""
+                                                    waitlistCapacityInput = lot.getLong("waitlistCapacity")?.toString() ?: ""
+
+                                                    status = "Editing existing lottery"
+                                                    val lotteryCampsiteIds = lot.get("campsiteIds") as? List<String> ?: emptyList()
+                                                    val associatedCampsites = allCampsites.filter { it.id in lotteryCampsiteIds }
+                                                    selectedCampsites = (selectedCampsites + associatedCampsites).distinctBy { it.id }
+                                                }
+                                            }
                                     }
+                                }
+                            )
+                        }
+                    }
+                }
+
+                Text(
+                    text = "Selected Campsites:",
+                    style = MaterialTheme.typography.titleMedium
+                )
+
+                selectedCampsites.forEach { campsite ->
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(8.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.background,
+                            contentColor = MaterialTheme.colorScheme.onBackground
+                        )
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = campsite.getName(),
+                                modifier = Modifier.weight(1f),
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+
+                            Button(
+                                onClick = {
+                                    if (drawCompleted && existingLotteryId != null) {
+                                        status = "This lottery has already been drawn and cannot be modified."
+                                        return@Button
+                                    }
+                                    isConfirming = false
+                                    selectedCampsites = selectedCampsites.filter { it.id != campsite.id }
+                                    if (selectedCampsites.isEmpty() && existingLotteryId != null) {
+                                        db.collection("lotteries").document(existingLotteryId!!)
+                                            .delete()
+                                            .addOnSuccessListener {
+                                                existingLotteryId = null
+                                                winnersInput = ""
+                                                waitlistCapacityInput = ""
+                                                regStartDateMillis = null
+                                                regEndDateMillis = null
+                                                capacityInput = ""
+                                                waitlistCapacityInput = ""
+                                                status = "Lottery deleted because no campsites remain."
+                                            }
+                                            .addOnFailureListener { e ->
+                                                status = "Error deleting lottery: ${e.message}"
+                                            }
+                                    }
+                                },
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error,
+                                    contentColor = MaterialTheme.colorScheme.onError
+                                )
+                            ) {
+                                Text("-")
                             }
                         }
+                    }
+                }
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Lottery configuration",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                OutlinedTextField(
+                    value = capacityInput,
+                    onValueChange = {
+                        capacityInput = it
+                        isConfirming = false
+                        status = ""
+                    },
+                    label = { Text("Lottery capacity") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                OutlinedTextField(
+                    value = waitlistCapacityInput,
+                    onValueChange = {
+                        if (it.isEmpty() || (it.toIntOrNull() ?: 0) > 0) {
+                            waitlistCapacityInput = it
+                            isConfirming = false
+                            status = ""
+                        }
+                    },
+                    label = { Text("Waitlist capacity (optional, empty = unlimited)") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+
+                //number of winners text box
+                OutlinedTextField(
+                    value = winnersInput,
+                    onValueChange = {
+                        winnersInput = it
+                        isConfirming = false
+                        status = ""
+                    },
+                    label = { Text("Number of winners") },
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = MaterialTheme.colorScheme.surface
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                Text(
+                    text = "Registration period",
+                    style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary
+                )
+
+                Text(
+                    text = "Choose when campers can enter the lottery.",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+
+                OutlinedButton(
+                    onClick = { showRegPicker = true },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
+                ) {
+                    Text(
+                        if (regStartDateMillis != null && regEndDateMillis != null)
+                            "Registration: ${formatUtcDate(regStartDateMillis!!)} - ${formatUtcDate(regEndDateMillis!!)}"
+                        else "Set Registration Period"
                     )
                 }
             }
-        }
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Text("Selected Campsites:", style = MaterialTheme.typography.titleMedium)
-        selectedCampsites.forEach { campsite ->
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Text("- ${campsite.getName()}")
-
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Button(
-                    onClick = {
-                        if (drawCompleted && existingLotteryId != null) {
-                            status = "This lottery has already been drawn and cannot be modified."
-                            return@Button
-                        }
-                        isConfirming = false
-                        selectedCampsites = selectedCampsites.filter { it.id != campsite.id }
-                        if (selectedCampsites.isEmpty() && existingLotteryId != null) {
-                            db.collection("lotteries").document(existingLotteryId!!)
-                                .delete()
-                                .addOnSuccessListener {
-                                    existingLotteryId = null
-                                    winnersInput = ""
-                                    waitlistCapacityInput = ""
-                                    regStartDateMillis = null
-                                    regEndDateMillis = null
-                                    capacityInput = ""
-                                    waitlistCapacityInput = ""
-                                    status = "Lottery deleted because no campsites remain."
-                                }
-                                .addOnFailureListener { e ->
-                                    status = "Error deleting lottery: ${e.message}"
-                                }
-                        }
-                    },
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-                ) {
-                    Text("-")
-                }
-            }
-        }
-
-        TextField(value = capacityInput, onValueChange = {
-            capacityInput = it
-            isConfirming = false
-            status = ""
-        },
-            label = { Text("Lottery capacity") }, modifier = Modifier.fillMaxWidth())
-
-
-        Spacer(modifier = Modifier.height(16.dp))
-        Spacer(modifier = Modifier.height(16.dp))
-
-        TextField(
-            value = waitlistCapacityInput,
-            onValueChange = {
-                if (it.isEmpty() || (it.toIntOrNull() ?: 0) > 0) {
-                    waitlistCapacityInput = it
-                    isConfirming = false
-                    status = ""
-                }
-            },
-            label = { Text("Waitlist capacity (optional, empty = unlimited)") },
-            modifier = Modifier.fillMaxWidth()
-        )
-
-
-        Button(onClick = { showRegPicker = true }, modifier = Modifier.fillMaxWidth()) {
-            Text(
-                if (regStartDateMillis != null && regEndDateMillis != null)
-                    "Registration: ${formatUtcDate(regStartDateMillis!!)} - ${formatUtcDate(regEndDateMillis!!)}"
-                else "Set Registration Period"
-            )
         }
 
         if (showRegPicker) {
@@ -205,23 +348,16 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
             }
         }
 
-        //number of winners text box
-        Spacer(modifier = Modifier.height(16.dp))
+        if (status.isNotEmpty()) {
+            Text(
+                text = status,
+                color = MaterialTheme.colorScheme.primary,
+                style = MaterialTheme.typography.bodyMedium
+            )
+        }
 
-        TextField(value = winnersInput, onValueChange = {
-            winnersInput = it
-            isConfirming = false
-            status = ""
-        },
-            label = { Text("Number of winners") }, modifier = Modifier.fillMaxWidth())
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Text(text = status, color = MaterialTheme.colorScheme.primary)
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            Button(onClick = {
+        Button(
+            onClick = {
                 if (drawCompleted && existingLotteryId != null) {
                     status = "This lottery has already been drawn and cannot be edited."
                     isConfirming = false
@@ -251,9 +387,9 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                     return@Button
                 }
 
-                
+
                 val capacityInt = capacityInput.toInt()
-                
+
 
                 if (campsiteIds.isEmpty()) {
                     status = "Error: Select at least one campsite."
@@ -331,10 +467,10 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                                         }
                                 } else {
                                     val newLotteryData = lotteryData + mapOf(
-                                    "entrants" to emptyList<String>(),
-                                    "waitlist" to emptyList<String>(),
-                                    "drawCompleted" to false
-                                )
+                                        "entrants" to emptyList<String>(),
+                                        "waitlist" to emptyList<String>(),
+                                        "drawCompleted" to false
+                                    )
                                     db.collection("lotteries").add(newLotteryData)
                                         .addOnSuccessListener {
                                             existingLotteryId = null
@@ -355,10 +491,12 @@ fun LotteryScreen(ownerUid: String, onBack: () -> Unit = {}) {
                         status = "Database error: ${e.message}"
                         isConfirming = false
                     }
-            }) {
-                Text(if (isConfirming) "Confirm Save" else "Save Listing")
-            }
-            Button(onClick = onBack) { Text("Back") }
+            },
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 48.dp)
+        ) {
+            Text(if (isConfirming) "Confirm Save" else "Save Listing")
         }
     }
 }
