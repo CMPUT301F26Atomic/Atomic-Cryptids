@@ -135,6 +135,13 @@ fun CamperScreen(navController: NavController, camper: Camper, onSelectCampsite:
             ) {
                 Text("My reservations")
             }
+
+            OutlinedButton(
+                onClick = { navController.navigate("notifications") },
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("Notifications")
+            }
         }
 
         Card(
