@@ -21,6 +21,34 @@ object LotteryDraw {
     fun isDrawDue(nowMillis: Long, registrationEnd: Long?, drawCompleted: Boolean): Boolean =
         !drawCompleted && registrationEnd != null && nowMillis >= registrationEnd
 
+    fun getCampsiteNames(campsiteIds: List<String>, onResult: (String) -> Unit) {
+        if (campsiteIds.isEmpty()) {
+            onResult("a campsite")
+            return
+        }
+
+        val db = FirebaseFirestore.getInstance()
+        val campsiteNames = mutableListOf<String>()
+        var remaining = campsiteIds.size
+
+        for (campsiteId in campsiteIds) {
+            db.collection("campsites").document(campsiteId)
+                .get()
+                .addOnSuccessListener { campsiteDoc ->
+                    val name = campsiteDoc.getString("name")
+                    if (name != null) {
+                        campsiteNames.add(name)
+                    }
+                }
+                .addOnCompleteListener {
+                    remaining -= 1
+                    if (remaining == 0) {
+                        onResult(campsiteNames.joinToString(", "))
+                    }
+                }
+        }
+    }
+
     fun runDraws(onComplete: (String) -> Unit = {}) {
         val db = FirebaseFirestore.getInstance()
         db.collection("lotteries")
@@ -36,6 +64,10 @@ object LotteryDraw {
                 }
                 var remaining = due.size
                 due.forEach { doc ->
+
+                    var lotteryPool = listOf<String>()
+                    var lotteryWinners = listOf<String>()
+
                     db.runTransaction { transaction ->
                         val fresh = transaction.get(doc.reference)
                         if (fresh.getBoolean("drawCompleted") != false) {
@@ -50,14 +82,32 @@ object LotteryDraw {
                             .orEmpty().filterIsInstance<String>()
                         val pool = (entrants + waitlist).distinct()
                         val winnersCount = (fresh.getLong("numberOfWinners") ?: 0L).toInt()
+
+                        val winners = pickWinners(pool, winnersCount)
+                        lotteryPool = pool
+                        lotteryWinners = winners
+
                         transaction.update(
                             doc.reference, mapOf(
-                                "winners" to pickWinners(pool, winnersCount),
+                                "winners" to winners,
                                 "drawCompleted" to true,
                                 "drawnAt" to System.currentTimeMillis(),
                             )
                         )
                         null
+
+                    }.addOnSuccessListener {
+                        val campsiteIds = (doc.get("campsiteIds") as? List<*>).orEmpty().filterIsInstance<String>()
+                        getCampsiteNames(campsiteIds) { campsiteNames ->
+                            for (uid in lotteryPool) {
+                                if (uid in lotteryWinners) {
+                                    Notification.send(uid, "win", "You won the lottery for $campsiteNames! You can now reserve your campsite.")
+                                } else {
+                                    Notification.send(uid, "lose", "You were not selected in the lottery for $campsiteNames.")
+                                }
+                            }
+                        }
+
                     }.addOnCompleteListener {
                         remaining--
                         if (remaining == 0) onComplete("Draws completed")

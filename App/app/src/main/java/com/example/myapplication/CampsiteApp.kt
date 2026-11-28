@@ -234,6 +234,9 @@ fun CampsiteApp(session: AppSessionViewModel) {
         composable("mypastreservations") {
             MyPastReservationsScreen(navController)
         }
+        composable("notifications") {
+            NotificationsScreen(navController)
+        }
         composable("ownerreservations") {
             OwnerReservationsScreen(navController)
         }
