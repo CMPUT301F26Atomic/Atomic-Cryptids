@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -31,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Campsite
@@ -50,6 +53,29 @@ fun ReserveScreen(navController: NavController, campsite: Campsite) {
     var showEndPicker by remember { mutableStateOf(false) }
     var status by remember { mutableStateOf("") }
     var refresh by remember { mutableIntStateOf(0) }
+    val context = LocalContext.current
+
+    var confirmedReservation by remember {
+        mutableStateOf<Reservation?>(null)
+    }
+
+    var pendingCsv by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    val csvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        val csv = pendingCsv
+
+        if (uri != null && csv != null) {
+            ReservationCsvDownload.save(context, uri, csv) {
+                status = it
+            }
+        }
+
+        pendingCsv = null
+    }
 
     LaunchedEffect(refresh) {
         Reservation.fetchActiveForCampsite(campsite.id, { existing = it }, { status = it })
@@ -253,16 +279,20 @@ fun ReserveScreen(navController: NavController, campsite: Campsite) {
                 if (error != null) {
                     status = error
                 } else {
-                    Reservation(
+                    val reservation = Reservation(
                         campsiteId = campsite.id,
                         campsiteName = campsite.getName(),
                         campsiteLocation = campsite.getLocation(),
                         userId = uid,
                         startDateMillis = startDate!!,
                         endDateMillis = endDate!!,
-                    ).save { result ->
+                    )
+
+                    reservation.save { result ->
                         status = if (result == "Saved") "Reserved!" else result
+
                         if (result == "Saved") {
+                            confirmedReservation = reservation
                             startDate = null
                             endDate = null
                             refresh++
@@ -284,5 +314,23 @@ fun ReserveScreen(navController: NavController, campsite: Campsite) {
                 color = MaterialTheme.colorScheme.onBackground
             )
         }
+    }
+
+    confirmedReservation?.let { reservation ->
+        ReservationConfirmationDialog(
+            reservation = reservation,
+            isCancellation = false,
+            onDismiss = {
+                confirmedReservation = null
+            },
+            onDownloadCsv = {
+                pendingCsv = ReservationCsvExporter.generate(
+                    reservation,
+                    isCancellation = false
+                )
+
+                csvLauncher.launch("reservation-confirmation.csv")
+            }
+        )
     }
 }
