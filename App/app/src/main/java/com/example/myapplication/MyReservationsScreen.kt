@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,6 +32,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.atomiccryptids.campsiteapp.Reservation
@@ -47,6 +50,30 @@ fun MyReservationsScreen(navController: NavController) {
     var status by remember { mutableStateOf("") }
     var refresh by remember { mutableIntStateOf(0) }
     var pendingCancel by remember { mutableStateOf<Reservation?>(null) }
+
+    val context = LocalContext.current
+
+    var cancelledReservation by remember {
+        mutableStateOf<Reservation?>(null)
+    }
+
+    var pendingCsv by remember {
+        mutableStateOf<String?>(null)
+    }
+
+    val csvLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        val csv = pendingCsv
+
+        if (uri != null && csv != null) {
+            ReservationCsvDownload.save(context, uri, csv) {
+                status = it
+            }
+        }
+
+        pendingCsv = null
+    }
 
     LaunchedEffect(refresh) {
         Reservation.fetchActiveForUser(
@@ -199,13 +226,34 @@ fun MyReservationsScreen(navController: NavController) {
                 TextButton(onClick = {
                     reservation.cancel { result ->
                         status = result
-                        refresh++
+
+                        if (result == "Cancelled") {
+                            cancelledReservation = reservation
+                            refresh++
+                        }
                     }
                     pendingCancel = null
                 }) { Text("Yes, cancel") }
             },
             dismissButton = {
                 TextButton(onClick = { pendingCancel = null }) { Text("Keep it") }
+            }
+        )
+    }
+    cancelledReservation?.let { reservation ->
+        ReservationConfirmationDialog(
+            reservation = reservation,
+            isCancellation = true,
+            onDismiss = {
+                cancelledReservation = null
+            },
+            onDownloadCsv = {
+                pendingCsv = ReservationCsvExporter.generate(
+                    reservation,
+                    isCancellation = true
+                )
+
+                csvLauncher.launch("cancellation-confirmation.csv")
             }
         )
     }
