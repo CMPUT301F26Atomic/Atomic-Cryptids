@@ -70,15 +70,22 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
     var lotteryDetails by remember {
         mutableStateOf<Map<String, Any>?>(null)
     }
+    var ownerUsername by remember(campsite.getOwner()) {
+        mutableStateOf("Loading...")
+    }
 
-    LaunchedEffect(campsite.id) {
+    LaunchedEffect(campsite.getOwner()) {
         FirebaseFirestore.getInstance()
-            .collection("lotteries")
-            .whereArrayContains("campsiteIds", campsite.id)
+            .collection("users")
+            .document(campsite.getOwner())
             .get()
-            .addOnSuccessListener { snapshot ->
-                lotteryDetails = snapshot.documents.firstOrNull()?.data
-                lotteryLoaded = true
+            .addOnSuccessListener { document ->
+                ownerUsername = document.getString("username")
+                    ?.takeIf { it.isNotBlank() }
+                    ?: "Unknown owner"
+            }
+            .addOnFailureListener {
+                ownerUsername = "Unable to load owner"
             }
     }
 
@@ -210,7 +217,7 @@ fun CampsiteScreen(navController: NavController, campsite: Campsite, user: User)
                 HorizontalDivider()
 
                 Text(
-                    text = "Campsite owner",
+                    text = ownerUsername,
                     style = MaterialTheme.typography.titleMedium
                 )
 
