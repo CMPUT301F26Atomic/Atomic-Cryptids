@@ -37,6 +37,7 @@ class Campsite(
 ) {
     private val participants = mutableStateListOf<String>()
 
+
     val campsiteToMap: Map<String, Any?>
         get() = buildMap {
             put("capacity", capacity)
